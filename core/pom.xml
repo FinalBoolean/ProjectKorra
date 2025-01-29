@@ -38,12 +38,16 @@
     <!-- Paper Repo -->
     <repository>
       <id>papermc</id>
+      <url>https://repo.papermc.io/maven-public/</url>
+    </repository>
+    <repository>
+      <id>old-papermc</id>
       <url>https://papermc.io/repo/repository/maven-public/</url>
     </repository>
     <!-- Placeholder API Repo -->
     <repository>
       <id>placeholderapi</id>
-      <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+      <url>https://repo.minebench.de/</url>
     </repository>
     <!-- GriefDefender API Repo -->
     <repository>
@@ -82,7 +86,7 @@
     <dependency>
       <groupId>io.papermc</groupId>
       <artifactId>paperlib</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.7</version>
     </dependency>
     <!-- Minecraft Timings -->
     <!-- Spigot API -->

@@ -76,6 +76,8 @@ public class BendingPlayer extends OfflineBendingPlayer {
 	protected boolean tremorSense;
 	protected boolean illumination;
 	protected boolean chiBlocked;
+	private boolean stopFallDmg;
+	private boolean queueAirBlastStop;
 
 	public BendingPlayer(Player player) {
 		super(player);
@@ -965,4 +967,20 @@ public class BendingPlayer extends OfflineBendingPlayer {
 			this.saveSubElements();
 		}
 	}
+
+    public boolean isStopFallDmg() {
+        return stopFallDmg;
+    }
+
+    public void setStopFallDmg(boolean stopFallDmg) {
+        this.stopFallDmg = stopFallDmg;
+    }
+
+    public boolean isQueueAirBlastStop() {
+        return queueAirBlastStop;
+    }
+
+    public void setQueueAirBlastStop(boolean queueAirBlastStop) {
+        this.queueAirBlastStop = queueAirBlastStop;
+    }
 }

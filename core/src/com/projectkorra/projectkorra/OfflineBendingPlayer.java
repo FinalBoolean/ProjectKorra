@@ -5,7 +5,9 @@ import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.ability.util.MultiAbilityManager;
 import com.projectkorra.projectkorra.command.CooldownCommand;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
+import com.projectkorra.projectkorra.event.BendingPlayerLoadEvent;
 import com.projectkorra.projectkorra.event.PlayerBindChangeEvent;
+import com.projectkorra.projectkorra.object.AirBlastType;
 import com.projectkorra.projectkorra.storage.DBConnection;
 import com.projectkorra.projectkorra.util.ChatUtil;
 import com.projectkorra.projectkorra.util.Cooldown;
@@ -79,6 +81,7 @@ public class OfflineBendingPlayer {
     private long lastAccessed;
     private long uncacheTime = 30_000; //This is the default time to unload after when the data is accessed by code, NOT when logging out
     private BukkitTask uncache;
+    private AirBlastType airBlastType = AirBlastType.LEGACY;
 
     public OfflineBendingPlayer(@NotNull OfflinePlayer player) {
         this.player = player;
@@ -103,7 +106,7 @@ public class OfflineBendingPlayer {
             OfflineBendingPlayer oBendingPlayer = PLAYERS.get(uuid); //Get cached instance
             if (offlinePlayer.isOnline() && !(oBendingPlayer instanceof BendingPlayer)) {
                 oBendingPlayer = convertToOnline(oBendingPlayer); //Convert to online instance
-                ((BendingPlayer)oBendingPlayer).postLoad();
+                ((BendingPlayer) oBendingPlayer).postLoad();
             }
             if (!(oBendingPlayer instanceof BendingPlayer)) {
                 oBendingPlayer.lastAccessed = System.currentTimeMillis();
@@ -115,8 +118,8 @@ public class OfflineBendingPlayer {
         Runnable runnable = () -> {
             OfflineBendingPlayer bPlayer = new OfflineBendingPlayer(offlinePlayer);
             if (offlinePlayer.isOnline()) {
-                bPlayer = new BendingPlayer(((Player)offlinePlayer));
-                ONLINE_PLAYERS.put(uuid, (BendingPlayer)bPlayer);
+                bPlayer = new BendingPlayer(((Player) offlinePlayer));
+                ONLINE_PLAYERS.put(uuid, (BendingPlayer) bPlayer);
             }
 
             PLAYERS.put(uuid, bPlayer);
@@ -128,10 +131,10 @@ public class OfflineBendingPlayer {
                     Bukkit.getScheduler().runTask(ProjectKorra.plugin, () -> ProjectKorra.log.info("Created new BendingPlayer for " + offlinePlayer.getName()));
                     OfflineBendingPlayer newPlayer;
                     if (offlinePlayer.isOnline()) {
-                        newPlayer = new BendingPlayer((Player)offlinePlayer);
+                        newPlayer = new BendingPlayer((Player) offlinePlayer);
                         //Call postLoad() on the main thread and wait for it to complete
                         Bukkit.getScheduler().callSyncMethod(ProjectKorra.plugin, () -> {
-                            ((BendingPlayer)newPlayer).postLoad();
+                            ((BendingPlayer) newPlayer).postLoad();
                             return true;
                         }).get();
                         ONLINE_PLAYERS.put(uuid, (BendingPlayer) newPlayer);
@@ -139,6 +142,7 @@ public class OfflineBendingPlayer {
                         newPlayer = new OfflineBendingPlayer(offlinePlayer);
                     }
                     PLAYERS.put(uuid, newPlayer);
+                    Bukkit.getPluginManager().callEvent(new BendingPlayerLoadEvent(newPlayer));
                     future.complete(newPlayer);
                 } else {
                     // The player has at least played before.
@@ -239,7 +243,7 @@ public class OfflineBendingPlayer {
                                                 continue subloop;
                                             }
                                         }
-                                    } else if (((Player)offlinePlayer).hasPermission("bending." + sub.getParentElement().getName().toLowerCase() + "." + sub.getName().toLowerCase() + sub.getType().getBending())
+                                    } else if (((Player) offlinePlayer).hasPermission("bending." + sub.getParentElement().getName().toLowerCase() + "." + sub.getName().toLowerCase() + sub.getType().getBending())
                                             && bPlayer.elements.contains(sub.getParentElement())) {
                                         bPlayer.subelements.add(sub);
                                         shouldSave = true;
@@ -367,7 +371,8 @@ public class OfflineBendingPlayer {
                     } else func.test(abilitiesClone); //Addon elements should be loaded by now
 
                     //Load permaRemove
-                    if (permaremovedField != null && permaremovedField.equalsIgnoreCase("true")) bPlayer.permaRemoved = true;
+                    if (permaremovedField != null && permaremovedField.equalsIgnoreCase("true"))
+                        bPlayer.permaRemoved = true;
 
                     //Load cooldowns
                     if (ProjectKorra.isDatabaseCooldownsEnabled()) {
@@ -382,24 +387,33 @@ public class OfflineBendingPlayer {
                         }
                     }
 
-                    //Load tempelements from the database
-                   try (ResultSet rs3 = DBConnection.sql.readQuery("SELECT * FROM pk_temp_elements WHERE uuid = '" + uuid.toString() + "'")) {
-                       Map<Element, Long> elements = new HashMap<>();
-                       Map<SubElement, Long> subElements = new HashMap<>();
+                    try (ResultSet rs = DBConnection.sql.readQuery("SELECT * FROM pk_air_type WHERE uuid = '" + uuid + "'")) {
+                        if (rs.next()) {
+                            int airTypeOrdinal = rs.getInt("air_type");
+                            bPlayer.airBlastType = AirBlastType.values()[airTypeOrdinal];
+                        } else {
+                            System.out.println("No entry found for UUID: " + uuid);
+                        }
+                    }
 
-                       while (rs3.next()) {
+                    //Load tempelements from the database
+                    try (ResultSet rs3 = DBConnection.sql.readQuery("SELECT * FROM pk_temp_elements WHERE uuid = '" + uuid.toString() + "'")) {
+                        Map<Element, Long> elements = new HashMap<>();
+                        Map<SubElement, Long> subElements = new HashMap<>();
+
+                        while (rs3.next()) {
                             Element element = Element.getElement(rs3.getString("element"));
                             long time = rs3.getLong("expiry");
 
                             if (element instanceof SubElement) subElements.put((SubElement) element, time);
                             else elements.put(element, time);
-                       }
+                        }
 
-                       bPlayer.tempElements = elements;
-                       bPlayer.tempSubElements = subElements;
-                   } catch (SQLException e) {
-                       e.printStackTrace();
-                   }
+                        bPlayer.tempElements = elements;
+                        bPlayer.tempSubElements = subElements;
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
 
 
                     bPlayer.loading = false;
@@ -415,7 +429,10 @@ public class OfflineBendingPlayer {
                     }
 
                     OfflineBendingPlayer finalBPlayer4 = bPlayer;
-                    Bukkit.getScheduler().runTask(ProjectKorra.plugin, () -> future.complete(finalBPlayer4));
+                    Bukkit.getScheduler().runTask(ProjectKorra.plugin, () -> {
+                        Bukkit.getPluginManager().callEvent(new BendingPlayerLoadEvent(finalBPlayer4));
+                        future.complete(finalBPlayer4);
+                    });
                 }
             } catch (final SQLException | ExecutionException | InterruptedException ex) {
                 ex.printStackTrace();
@@ -552,6 +569,13 @@ public class OfflineBendingPlayer {
         }
     }
 
+    public void saveAirBlastType() {
+        Bukkit.getScheduler().runTaskLater(ProjectKorra.plugin, () -> {
+            String query = "INSERT INTO pk_air_type (uuid, air_type) VALUES ('" + this.player.getUniqueId() + "', " + this.airBlastType.ordinal() + ") ON CONFLICT(uuid) DO UPDATE SET air_type = " + this.airBlastType.ordinal() + ";";
+            DBConnection.sql.modifyQuery(query);
+        }, 1L);
+    }
+
     /**
      * Binds an ability to the hotbar slot that the player is on.
      *
@@ -566,13 +590,13 @@ public class OfflineBendingPlayer {
      * Binds an Ability to a specific hotbar slot.
      *
      * @param ability The ability name to bind
-     * @param slot The slot to bind on
+     * @param slot    The slot to bind on
      * @see #bindAbility(String)
      */
     public void bindAbility(final String ability, final int slot) {
         boolean realPlayer = this instanceof BendingPlayer;
-        if (realPlayer && MultiAbilityManager.playerAbilities.containsKey((Player)this.getPlayer())) {
-            ChatUtil.sendBrandingMessage((Player)this.getPlayer(), ChatColor.RED + ConfigManager.languageConfig.get().getString("Commands.Bind.CantEditBinds"));
+        if (realPlayer && MultiAbilityManager.playerAbilities.containsKey((Player) this.getPlayer())) {
+            ChatUtil.sendBrandingMessage((Player) this.getPlayer(), ChatColor.RED + ConfigManager.languageConfig.get().getString("Commands.Bind.CantEditBinds"));
             return;
         }
 
@@ -580,19 +604,16 @@ public class OfflineBendingPlayer {
         if (coreAbil == null) return;
         final String fixedName = coreAbil.getName();
 
-        if (realPlayer) {
-            PlayerBindChangeEvent event = new PlayerBindChangeEvent((Player)this.getPlayer(), fixedName, slot, ability != null, false);
-            ProjectKorra.plugin.getServer().getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return;
-            }
+        PlayerBindChangeEvent event = new PlayerBindChangeEvent(this.getPlayer().getPlayer(), fixedName, slot, ability != null, false);
+        ProjectKorra.plugin.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
         }
-
 
         this.getAbilities().put(slot, fixedName);
 
         if (realPlayer) {
-            ChatUtil.sendBrandingMessage((Player)this.getPlayer(), coreAbil.getElement().getColor() + ConfigManager.languageConfig.get().getString("Commands.Bind.SuccessfullyBound").replace("{ability}", fixedName).replace("{slot}", String.valueOf(slot)));
+            ChatUtil.sendBrandingMessage((Player) this.getPlayer(), coreAbil.getElement().getColor() + ConfigManager.languageConfig.get().getString("Commands.Bind.SuccessfullyBound").replace("{ability}", fixedName).replace("{slot}", String.valueOf(slot)));
         }
 
         this.saveAbility(fixedName, slot);
@@ -600,12 +621,13 @@ public class OfflineBendingPlayer {
 
     /**
      * Save the bound ability in the slot to the database
+     *
      * @param ability The ability to save
-     * @param slot The slot we are saving
+     * @param slot    The slot we are saving
      */
     public void saveAbility(final String ability, final int slot) {
         // Temp code to block modifications of binds, Should be replaced when bind event is added.
-        if (this instanceof BendingPlayer && MultiAbilityManager.playerAbilities.containsKey((Player)this.getPlayer())) {
+        if (this instanceof BendingPlayer && MultiAbilityManager.playerAbilities.containsKey((Player) this.getPlayer())) {
             return;
         }
 
@@ -631,9 +653,9 @@ public class OfflineBendingPlayer {
     }
 
     /**
-     * Get the list of temporary elements & subelements the {@link BendingPlayer} has.
+     * Get the list of temporary elements and subelements the {@link BendingPlayer} has.
      *
-     * @return a map of temporary elements & subelements
+     * @return a map of temporary elements and subelements
      */
     public Map<Element, Long> getTempElements() {
         return this.tempElements;
@@ -641,7 +663,7 @@ public class OfflineBendingPlayer {
 
     /**
      * Get the list of temporary subelements the {@link BendingPlayer} has.
-     *
+     * <p>
      * Temporary subelements are a bit more confusing than elements. If a subelement's expirary
      * is set to -1, it means it is linked with the temporary parent element. When that parent
      * element is removed, the sub should be removed as well.
@@ -697,6 +719,7 @@ public class OfflineBendingPlayer {
 
     /**
      * Sets the currently held slot
+     *
      * @param slot The slot number
      */
     public void setCurrentSlot(int slot) {
@@ -711,7 +734,6 @@ public class OfflineBendingPlayer {
     public HashMap<Integer, String> getAbilities() {
         return this.abilities;
     }
-
 
 
     /**
@@ -752,9 +774,9 @@ public class OfflineBendingPlayer {
      *
      * @param ability The ability to check
      * @return the cooldown time
-     *         <p>
-     *         or -1 if cooldown doesn't exist
-     *         </p>
+     * <p>
+     * or -1 if cooldown doesn't exist
+     * </p>
      */
     public long getCooldown(final String ability) {
         if (this.cooldowns.containsKey(ability)) {
@@ -775,6 +797,7 @@ public class OfflineBendingPlayer {
 
     /**
      * Removes the cooldown of an ability
+     *
      * @param ability The ability whose cooldown to remove
      */
     public void removeCooldown(@NotNull final CoreAbility ability) {
@@ -837,7 +860,8 @@ public class OfflineBendingPlayer {
 
     /**
      * Applies a cooldown for an ability to the current BendingPlayer.
-     * @param ability The ability to apply the cooldown to
+     *
+     * @param ability  The ability to apply the cooldown to
      * @param cooldown The cooldown time
      * @param database Whether or not to save the cooldown to the database
      */
@@ -882,7 +906,9 @@ public class OfflineBendingPlayer {
     }
 
     /**
-     * @return Returns true if this BendingPlayer is fully loaded
+     * Returns true if this BendingPlayer is fully loaded
+     *
+     * @return True if the player is fully loaded
      */
     public boolean isLoaded() {
         return !this.loading;
@@ -898,7 +924,7 @@ public class OfflineBendingPlayer {
         if (element == Element.AVATAR) {
             // At the moment we'll allow for both permissions to return true.
             // Later on we can consider deleting the bending.ability.avatarstate option.
-            return this.player instanceof Player && ((Player)this.player).hasPermission("bending.avatar");
+            return this.player instanceof Player && ((Player) this.player).hasPermission("bending.avatar");
         } else if (hasTempElement(element)) {
             return true;
         } else if (!(element instanceof SubElement)) {
@@ -920,6 +946,7 @@ public class OfflineBendingPlayer {
 
     /**
      * Checks to see if the {@link BendingPlayer} has a temporary element.
+     *
      * @param element The element to check
      * @return true If the player has the element
      */
@@ -932,6 +959,7 @@ public class OfflineBendingPlayer {
 
     /**
      * Checks to see if the {@link BendingPlayer} has a temporary subelement.
+     *
      * @param sub The subelement to check
      * @return true If the player has the subelement
      */
@@ -942,6 +970,7 @@ public class OfflineBendingPlayer {
 
     /**
      * Checks to see if the {@link BendingPlayer} has any temporary elements that have not expired.
+     *
      * @return true If the player has any temporary elements
      */
     public boolean hasTempElements() {
@@ -960,7 +989,9 @@ public class OfflineBendingPlayer {
     }
 
     /**
-     * @return Is the player online?
+     * Checks to see if this {@link OfflineBendingPlayer} is an instanceof {@link BendingPlayer}.
+     *
+     * @return Is the player online
      */
     public boolean isOnline() {
         return this instanceof BendingPlayer;
@@ -1148,7 +1179,7 @@ public class OfflineBendingPlayer {
      * Checks to see if a player can use SpiritualProjection.
      *
      * @return true If player has permission node
-     *         "bending.air.spiritualprojection"
+     * "bending.air.spiritualprojection"
      */
     public boolean canUseSpiritualProjection() {
         return this.subelements.contains(Element.SPIRITUAL) || this.hasTempSubElement(Element.SPIRITUAL); //If they have spiritual projection OR temporary spiritual projection that hasn't expired
@@ -1219,7 +1250,8 @@ public class OfflineBendingPlayer {
         offlineBendingPlayer.loading = false;
         offlineBendingPlayer.lastAccessed = System.currentTimeMillis();
 
-        if (bendingPlayer.getPlayer() == null || !bendingPlayer.getPlayer().isOnline()) ONLINE_PLAYERS.remove(bendingPlayer.getUUID());
+        if (bendingPlayer.getPlayer() == null || !bendingPlayer.getPlayer().isOnline())
+            ONLINE_PLAYERS.remove(bendingPlayer.getUUID());
         PLAYERS.put(bendingPlayer.getUUID(), offlineBendingPlayer);
 
         TEMP_ELEMENTS.removeIf(pair -> pair.getLeft().getUniqueId().equals(bendingPlayer.getUUID()));
@@ -1247,11 +1279,20 @@ public class OfflineBendingPlayer {
 
     /**
      * Uncaches this instance of an offline BendingPlayer
+     *
      * @param time The amount of milliseconds to wait before uncaching
      */
     public void uncacheAfter(long time) {
         this.uncacheTime = time;
         this.lastAccessed = System.currentTimeMillis();
         uncache();
+    }
+
+    public AirBlastType getAirBlastType() {
+        return airBlastType;
+    }
+
+    public void setAirBlastType(AirBlastType airBlastType) {
+        this.airBlastType = airBlastType;
     }
 }

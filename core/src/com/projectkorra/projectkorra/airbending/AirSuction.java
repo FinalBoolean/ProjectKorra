@@ -5,10 +5,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.region.RegionProtection;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Door;
@@ -238,6 +240,11 @@ public class AirSuction extends AirAbility {
 				}
 				entity.setFireTicks(0);
 				breakBreathbendingHold(entity);
+
+				if (entity instanceof Player) {
+					BendingPlayer effectPlayer = BendingPlayer.getBendingPlayer((Player) entity);
+					effectPlayer.setStopFallDmg(true);
+				}
 			}
 
 			this.advanceLocation();

@@ -545,6 +545,11 @@ public class PKListener implements Listener {
 				event.setCancelled(true);
 			}
 		}
+
+		// Disable dmg
+		if (EarthAbility.getMovedEarth().containsKey(block)) {
+			event.setCancelled(true);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -567,6 +572,26 @@ public class PKListener implements Listener {
 
 		if (event.getCause() == DamageCause.FIRE && FireAbility.getSourcePlayers().containsKey(entity.getLocation().getBlock())) {
 			new FireDamageTimer(entity, FireAbility.getSourcePlayers().get(entity.getLocation().getBlock()), null, true);
+		}
+
+		if (event.getCause() == EntityDamageEvent.DamageCause.FIRE) {
+			double entityX = entity.getLocation().getX();
+			double entityY = entity.getLocation().getY();
+			double entityZ = entity.getLocation().getZ();
+			boolean inBlueFire = false;
+			for (double x = entityX - 0.6; x <= entityX + 0.6; x += 0.6) {
+				for (double z = entityZ - 0.6; z <= entityZ + 0.6; z += 0.6) {
+					Block block = entity.getWorld().getBlockAt((int)Math.floor(x), (int)Math.floor(entityY), (int)Math.floor(z));
+					if (block.getType() != Material.SOUL_FIRE) continue;
+					inBlueFire = true;
+					break;
+				}
+				if (inBlueFire) break;
+			}
+			if (inBlueFire) {
+				double regularFireDamage = 1.0;
+				event.setDamage(regularFireDamage);
+			}
 		}
 		
 		if (FireDamageTimer.isEnflamed(entity) && event.getCause() == DamageCause.FIRE_TICK) {
@@ -993,6 +1018,11 @@ public class PKListener implements Listener {
 			if (bPlayer.hasElement(Element.EARTH) && event.getCause() == DamageCause.SUFFOCATION && TempBlock.isTempBlock(player.getEyeLocation().getBlock())) {
 				event.setDamage(0D);
 				event.setCancelled(true);
+			}
+
+			if (event.getCause() == DamageCause.FALL && bPlayer.isStopFallDmg()) {
+				event.setCancelled(true);
+				bPlayer.setStopFallDmg(false);
 			}
 		}
 	}
@@ -1793,6 +1823,8 @@ public class PKListener implements Listener {
 		if (BendingPlayer.isWorldDisabled(player.getWorld())) {
 			return;
 		}
+
+		boolean used = AirScooter.check(player);
 		BendingPlayer bPlayer = BendingPlayer.getBendingPlayer(player);
 
 		String abil = bPlayer.getBoundAbilityName();
@@ -1814,7 +1846,9 @@ public class PKListener implements Listener {
 					} else if (abil.equalsIgnoreCase("AirBurst")) {
 						AirBurst.coneBurst(player);
 					} else if (abil.equalsIgnoreCase("AirScooter")) {
-						new AirScooter(player);
+						if (!used) {
+							new AirScooter(player);
+						}
 					} else if (abil.equalsIgnoreCase("AirSpout")) {
 						new AirSpout(player);
 					} else if (abil.equalsIgnoreCase("AirSwipe")) {

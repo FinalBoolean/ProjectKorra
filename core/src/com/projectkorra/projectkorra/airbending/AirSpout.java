@@ -163,6 +163,7 @@ public class AirSpout extends AirAbility {
 			if (dy > this.height) {
 				this.removeFlight();
 			} else {
+				bPlayer.setQueueAirBlastStop(true);
 				this.allowFlight();
 			}
 			this.rotateAirColumn(block);
@@ -174,6 +175,7 @@ public class AirSpout extends AirAbility {
 	@Override
 	public void remove() {
 		super.remove();
+		bPlayer.setQueueAirBlastStop(false);
 		this.flightHandler.removeInstance(this.player, this.getName());
 	}
 

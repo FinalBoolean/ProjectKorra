@@ -3,6 +3,7 @@ package com.projectkorra.projectkorra.airbending;
 import java.util.ArrayList;
 import java.util.Random;
 
+import com.projectkorra.projectkorra.object.AirBlastType;
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -43,9 +44,7 @@ public class AirScooter extends AirAbility {
 	public AirScooter(final Player player) {
 		super(player);
 
-		if (check(player)) {
-			return;
-		} else if (!player.isSprinting() || GeneralMethods.isSolid(player.getEyeLocation().getBlock()) || ElementalAbility.isWater(player.getEyeLocation().getBlock())) {
+		if (GeneralMethods.isSolid(player.getEyeLocation().getBlock()) || ElementalAbility.isWater(player.getEyeLocation().getBlock())) {
 			return;
 		} else if (GeneralMethods.isSolid(player.getLocation().add(0, -.5, 0).getBlock())) {
 			return;
@@ -62,6 +61,11 @@ public class AirScooter extends AirAbility {
 		this.useslime = getConfig().getBoolean("Abilities.Air.AirScooter.ShowSitting");
 		this.random = new Random();
 		this.angles = new ArrayList<>();
+
+		this.getFloor();
+		if (this.floorblock == null) {
+			return;
+		}
 
 		this.flightHandler.createInstance(player, this.getName());
 		player.setAllowFlight(true);
@@ -150,8 +154,14 @@ public class AirScooter extends AirAbility {
 			return;
 		}
 
-		Vector velocity = this.player.getEyeLocation().getDirection().clone().normalize();
-		velocity = velocity.clone().normalize().multiply(this.speed);
+		Vector direction = this.player.getEyeLocation().getDirection().clone();
+		double horizontalMagnitude = Math.sqrt(direction.getX() * direction.getX() + direction.getZ() * direction.getZ());
+		if (horizontalMagnitude != 0.0) {
+			direction.setX(direction.getX() / horizontalMagnitude);
+			direction.setZ(direction.getZ() / horizontalMagnitude);
+			direction.setY(0);
+		}
+		Vector velocity = direction.multiply(this.speed);
 		/*
 		 * checks the players speed and ends the move if they are going too slow
 		 */
@@ -173,12 +183,12 @@ public class AirScooter extends AirAbility {
 		 * Checks for how far the ground is away from the player it elevates or
 		 * lowers the player based on their distance from the ground.
 		 */
-		final double distance = this.player.getLocation().getY() - this.floorblock.getY();
-		Math.abs(distance - 2.4);
+		double distance = this.player.getLocation().getY() - (double)this.floorblock.getY();
+		double dX = this.bPlayer.getAirBlastType() == AirBlastType.LEGACY ? Math.abs(distance - 2.4) : 1.0;
 		if (distance > 2.75) {
-			velocity.setY(-.25);
-		} else if (distance < 2) {
-			velocity.setY(.25);
+			velocity.setY(-0.25 * dX * dX);
+		} else if (distance < 2.0) {
+			velocity.setY(0.25 * dX * dX);
 		} else {
 			velocity.setY(0);
 		}
@@ -209,6 +219,8 @@ public class AirScooter extends AirAbility {
 		if (this.random.nextInt(4) == 0) {
 			playAirbendingSound(this.player.getLocation());
 		}
+
+		bPlayer.setQueueAirBlastStop(true);
 	}
 
 	/*
@@ -220,6 +232,8 @@ public class AirScooter extends AirAbility {
 		if (this.slime != null) {
 			this.slime.remove();
 		}
+
+		this.bPlayer.setQueueAirBlastStop(false);
 		this.flightHandler.removeInstance(this.player, this.getName());
 		this.bPlayer.addCooldown(this);
 	}

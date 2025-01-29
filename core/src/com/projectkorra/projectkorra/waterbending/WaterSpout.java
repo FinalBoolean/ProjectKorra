@@ -196,6 +196,7 @@ public class WaterSpout extends WaterAbility {
 					}
 				}
 			} else {
+				this.bPlayer.setStopFallDmg(true);
 				this.bPlayer.addCooldown(this);
 				this.remove();
 				return;

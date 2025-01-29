@@ -3,10 +3,12 @@ package com.projectkorra.projectkorra.airbending.combo;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.projectkorra.projectkorra.BendingPlayer;
 import com.projectkorra.projectkorra.ability.util.ComboUtil;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
 import com.projectkorra.projectkorra.object.HorizontalVelocityTracker;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -202,6 +204,11 @@ public class AirSweep extends AirAbility implements ComboAbility {
 							if (this.damage != 0) {
 								if (entity instanceof LivingEntity) {
 									DamageHandler.damageEntity(entity, this.damage, this);
+								}
+
+								if (entity instanceof Player) {
+									BendingPlayer bendingPlayer = BendingPlayer.getBendingPlayer((Player) entity);
+									bendingPlayer.setStopFallDmg(true);
 								}
 							}
 						}
