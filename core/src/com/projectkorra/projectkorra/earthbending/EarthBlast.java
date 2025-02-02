@@ -50,6 +50,7 @@ public class EarthBlast extends EarthAbility {
 	private Location destination;
 	private Location firstDestination;
 	private Block sourceBlock;
+	private int progress;
 
 	public EarthBlast(final Player player) {
 		super(player);
@@ -238,7 +239,7 @@ public class EarthBlast extends EarthAbility {
 					block = this.location.getBlock();
 				}
 
-				if (this.isTransparent(block) && !block.isLiquid()) {
+				if ((progress < 3 && EarthAbility.getMovedEarth().containsKey(block)) || this.isTransparent(block) && !block.isLiquid()) {
 					GeneralMethods.breakBlock(block);
 				} else if (!this.isSettingUp) {
 					this.remove();
@@ -254,7 +255,7 @@ public class EarthBlast extends EarthAbility {
 						block2 = this.location.getBlock();
 					}
 
-					if (this.isTransparent(block) && !block.isLiquid()) {
+					if ((progress < 3 && EarthAbility.getMovedEarth().containsKey(block)) || this.isTransparent(block) && !block.isLiquid()) {
 						GeneralMethods.breakBlock(block);
 					} else {
 						this.remove();
@@ -322,6 +323,8 @@ public class EarthBlast extends EarthAbility {
 					this.isAtDestination = true;
 					this.isProgressing = false;
 				}
+
+				this.progress++;
 
 				return;
 			}

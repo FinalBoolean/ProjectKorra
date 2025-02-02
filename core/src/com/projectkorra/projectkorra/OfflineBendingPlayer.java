@@ -5,7 +5,7 @@ import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.ability.util.MultiAbilityManager;
 import com.projectkorra.projectkorra.command.CooldownCommand;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
-import com.projectkorra.projectkorra.event.BendingPlayerLoadEvent;
+import com.projectkorra.projectkorra.event.BendingPlayerCreationEvent;
 import com.projectkorra.projectkorra.event.PlayerBindChangeEvent;
 import com.projectkorra.projectkorra.object.AirBlastType;
 import com.projectkorra.projectkorra.storage.DBConnection;
@@ -142,7 +142,6 @@ public class OfflineBendingPlayer {
                         newPlayer = new OfflineBendingPlayer(offlinePlayer);
                     }
                     PLAYERS.put(uuid, newPlayer);
-                    Bukkit.getPluginManager().callEvent(new BendingPlayerLoadEvent(newPlayer));
                     future.complete(newPlayer);
                 } else {
                     // The player has at least played before.
@@ -427,12 +426,6 @@ public class OfflineBendingPlayer {
                     } else {
                         bPlayer.uncacheAfter(30_000);
                     }
-
-                    OfflineBendingPlayer finalBPlayer4 = bPlayer;
-                    Bukkit.getScheduler().runTask(ProjectKorra.plugin, () -> {
-                        Bukkit.getPluginManager().callEvent(new BendingPlayerLoadEvent(finalBPlayer4));
-                        future.complete(finalBPlayer4);
-                    });
                 }
             } catch (final SQLException | ExecutionException | InterruptedException ex) {
                 ex.printStackTrace();

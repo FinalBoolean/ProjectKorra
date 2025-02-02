@@ -616,6 +616,10 @@ public class PKListener implements Listener {
 					event.setCancelled(true);
 				}
 			}
+
+			if (EarthAbility.getMovedEarth().containsKey(block)) {
+				event.setCancelled(true);
+			}
 		}
 
 
@@ -1015,9 +1019,24 @@ public class PKListener implements Listener {
 				event.setCancelled(!HeatControl.canBurn(player));
 			}
 
-			if (bPlayer.hasElement(Element.EARTH) && event.getCause() == DamageCause.SUFFOCATION && TempBlock.isTempBlock(player.getEyeLocation().getBlock())) {
-				event.setDamage(0D);
-				event.setCancelled(true);
+			if (bPlayer.hasElement(Element.EARTH) && event.getCause() == DamageCause.SUFFOCATION) {
+				boolean foundTempBlock = false;
+
+				for (double x = player.getLocation().getX() - 0.6; x <= player.getLocation().getX() + 0.6; x += 0.6) {
+					for (double z = player.getLocation().getZ() - 0.6; z <= player.getLocation().getZ() + 0.6; z += 0.6) {
+						Block block = player.getWorld().getBlockAt((int)Math.floor(x), (int)Math.floor(player.getLocation().getY()), (int)Math.floor(z));
+						if (TempBlock.isTempBlock(block) || EarthAbility.getMovedEarth().containsKey(block)) {
+							foundTempBlock = true;
+							break;
+						}
+					}
+				}
+
+
+				if (foundTempBlock) {
+					event.setCancelled(true);
+					event.setDamage(0);
+				}
 			}
 
 			if (event.getCause() == DamageCause.FALL && bPlayer.isStopFallDmg()) {

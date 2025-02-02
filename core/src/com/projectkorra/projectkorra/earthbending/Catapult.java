@@ -117,7 +117,7 @@ public class Catapult extends EarthAbility {
 				return;
 			}
 			this.activationHandled = true;
-			this.bPlayer.addCooldown(this);
+			this.bPlayer.addCooldown(this, this.stage == 0 ? this.cooldown * 3 : this.cooldown);
 		}
 
 		if (this.up.angle(this.player.getEyeLocation().getDirection()) > this.angle) {
