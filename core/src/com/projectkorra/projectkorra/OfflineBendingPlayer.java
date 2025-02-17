@@ -81,7 +81,7 @@ public class OfflineBendingPlayer {
     private long lastAccessed;
     private long uncacheTime = 30_000; //This is the default time to unload after when the data is accessed by code, NOT when logging out
     private BukkitTask uncache;
-    private AirBlastType airBlastType = AirBlastType.LEGACY;
+    private AirBlastType airBlastType = AirBlastType.BENDERS_MC;
 
     public OfflineBendingPlayer(@NotNull OfflinePlayer player) {
         this.player = player;
