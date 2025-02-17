@@ -130,6 +130,11 @@ public class AirBurst extends AirAbility {
 		if (hasAbility(player, AirBurst.class)) {
 			final AirBurst airBurst = getAbility(player, AirBurst.class);
 			airBurst.startConeBurst();
+
+			if (airBurst.isCharged) {
+				airBurst.bPlayer.addCooldown(airBurst);
+			}
+
 			airBurst.remove();
 		}
 	}
