@@ -160,10 +160,6 @@ public class DamageHandler {
 
 		if (entity.hasMetadata("BendingImmunity")) return;
 
-		if (entity.getWorld().getName().equalsIgnoreCase("bendersmc")) {
-			damage *= 2;
-		}
-
 		if (entity instanceof LivingEntity) {
 			if (checkTicks((LivingEntity) entity, damage)) {
 				return;
