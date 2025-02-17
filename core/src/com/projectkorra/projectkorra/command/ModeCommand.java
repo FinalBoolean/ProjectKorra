@@ -33,6 +33,8 @@ public class ModeCommand extends PKCommand
         catch (final IllegalArgumentException e) {
             sender.sendMessage(ChatColor.RED + "Invalid type! Available types are:");
             for (final AirBlastType type : AirBlastType.values()) {
+                if (type == AirBlastType.MEGACRAFT) continue; 
+
                 sender.sendMessage(ChatColor.YELLOW + "- " + type.name());
             }
         }

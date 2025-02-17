@@ -1,20 +1,23 @@
 package com.projectkorra.projectkorra.util;
 
 import com.projectkorra.projectkorra.GeneralMethods;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Particle.DustOptions;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Random;
+
 public enum ParticleEffect {
-	
+
 	ASH (Particle.ASH),
-	
+
 	/**
 	 * Applicable data: {@link BlockData}
 	 */
 	BLOCK_CRACK (Particle.BLOCK_CRACK),
-	
+
 	/**
 	 * Applicable data: {@link BlockData}
 	 */
@@ -41,7 +44,8 @@ public enum ParticleEffect {
 	EXPLOSION_HUGE (Particle.EXPLOSION_HUGE), @Deprecated HUGE_EXPLOSION (Particle.EXPLOSION_HUGE),
 	EXPLOSION_LARGE (Particle.EXPLOSION_LARGE), @Deprecated LARGE_EXPLODE (Particle.EXPLOSION_LARGE),
 	EXPLOSION_NORMAL (Particle.EXPLOSION_NORMAL), @Deprecated EXPLODE (Particle.EXPLOSION_NORMAL),
-	
+	COOL_AIR_PARTICLE (Particle.REDSTONE),
+
 	/**
 	 * Applicable data: {@link BlockData}
 	 */
@@ -55,7 +59,7 @@ public enum ParticleEffect {
 	FLAME (Particle.FLAME),
 	FLASH (Particle.FLASH),
 	HEART (Particle.HEART),
-	
+
 	/**
 	 * Applicable data: {@link ItemStack}
 	 */
@@ -68,7 +72,7 @@ public enum ParticleEffect {
 	NAUTILUS (Particle.NAUTILUS),
 	NOTE (Particle.NOTE),
 	PORTAL (Particle.PORTAL),
-	
+
 	/**
 	 * Applicable data: {@link DustOptions}
 	 */
@@ -103,19 +107,19 @@ public enum ParticleEffect {
 	WATER_SPLASH (Particle.WATER_SPLASH), @Deprecated SPLASH (Particle.WATER_SPLASH),
 	WATER_WAKE (Particle.WATER_WAKE), @Deprecated WAKE (Particle.WATER_WAKE),
 	WHITE_ASH (Particle.WHITE_ASH);
-	
+
 	Particle particle;
 	Class<?> dataClass;
-	
+
 	private ParticleEffect(Particle particle) {
 		this.particle = particle;
 		this.dataClass = particle.getDataType();
 	}
-	
+
 	public Particle getParticle() {
 		return particle;
 	}
-	
+
 	/**
 	 * Displays the particle at the specified location without offsets
 	 * @param loc Location to display the particle at
@@ -124,7 +128,7 @@ public enum ParticleEffect {
 	public void display(Location loc, int amount) {
 		display(loc, amount, 0, 0, 0);
 	}
-	
+
 	/**
 	 * Displays the particle at the specified location with no extra data
 	 * @param loc Location to spawn the particle
@@ -136,7 +140,7 @@ public enum ParticleEffect {
 	public void display(Location loc, int amount, double offsetX, double offsetY, double offsetZ) {
 		display(loc, amount, offsetX, offsetY, offsetZ, 0);
 	}
-	
+
 	/**
 	 * Displays the particle at the specified location with extra data
 	 * @param loc Location to spawn the particle
@@ -147,9 +151,16 @@ public enum ParticleEffect {
 	 * @param extra extra data to affect the particle, usually affects speed or does nothing
 	 */
 	public void display(Location loc, int amount, double offsetX, double offsetY, double offsetZ, double extra) {
-		loc.getWorld().spawnParticle(particle, loc, amount, offsetX, offsetY, offsetZ, extra, null, true);
+		Object data = null;
+
+		if (this == ParticleEffect.COOL_AIR_PARTICLE) {
+			Color color = new Random().nextBoolean() ? Color.WHITE : Color.fromRGB(169, 169, 169);  // Light gray
+			data = new Particle.DustOptions(color, 1.0f);
+		}
+
+		loc.getWorld().spawnParticle(particle, loc, amount, offsetX, offsetY, offsetZ, extra, data, true);
 	}
-	
+
 	/**
 	 * Displays the particle at the specified location with data
 	 * @param loc Location to spawn the particle
@@ -162,7 +173,7 @@ public enum ParticleEffect {
 	public void display(Location loc, int amount, double offsetX, double offsetY, double offsetZ, Object data) {
 		display(loc, amount, offsetX, offsetY, offsetZ, 0, data);
 	}
-	
+
 	/**
 	 * Displays the particle at the specified location with regular and extra data
 	 * @param loc Location to spawn the particle
