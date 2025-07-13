@@ -18,6 +18,10 @@ public class AirAgility extends AirAbility implements PassiveAbility {
 	@Attribute(Attribute.SPEED)
 	private int speedPower;
 
+	private double decayMinimum;
+	private long minimumAirBlastTime;
+
+
 	public AirAgility(final Player player) {
 		super(player);
 		this.setFields();
@@ -26,10 +30,20 @@ public class AirAgility extends AirAbility implements PassiveAbility {
 	public void setFields() {
 		this.jumpPower = ConfigManager.getConfig().getInt("Abilities.Air.Passive.AirAgility.JumpPower") - 1;
 		this.speedPower = ConfigManager.getConfig().getInt("Abilities.Air.Passive.AirAgility.SpeedPower") - 1;
+		this.decayMinimum = getConfig().getDouble("Abilities.Air.AirBlast.DecayMinimum");
+		this.minimumAirBlastTime = getConfig().getLong("Abilities.Air.AirBlast.MinimumAirBlastTime");
 	}
 
 	@Override
 	public void progress() {
+		if (System.currentTimeMillis() - bPlayer.getLastAirBlastTime() > minimumAirBlastTime) {
+			bPlayer.resetAirBlastDecay();
+		}
+
+		float decay = (float) bPlayer.getAirBlastDecay();  // between 0.4 and 1.0
+		float normalized = (decay - (float) decayMinimum) / (1.0f - (float) decayMinimum);  // Normalized to 0.0–1.0
+		player.setExp(Math.max(0f, Math.min(1f, normalized)));  // Clamp between 0 and 1
+
 		if ((!this.player.isSprinting() && !player.isFlying()) || !this.bPlayer.canUsePassive(this) || !this.bPlayer.canBendPassive(this)) {
 			return;
 		}

@@ -229,10 +229,14 @@ public abstract class FireAbility extends ElementalAbility {
 	}
 
 	public void playFirebendingParticles(final Location loc, final int amount, final double xOffset, final double yOffset, final double zOffset) {
+		playFirebendingParticles(loc, amount, xOffset, yOffset, zOffset, 0);
+	}
+
+	public void playFirebendingParticles(final Location loc, final int amount, final double xOffset, final double yOffset, final double zOffset, final double speed) {
 		if (this.getBendingPlayer().canUseSubElement(SubElement.BLUE_FIRE)) {
-			ParticleEffect.SOUL_FIRE_FLAME.display(loc, amount, xOffset, yOffset, zOffset);
+			ParticleEffect.SOUL_FIRE_FLAME.display(loc, amount, xOffset, yOffset, zOffset, speed);
 		} else {
-			ParticleEffect.FLAME.display(loc, amount, xOffset, yOffset, zOffset);
+			ParticleEffect.FLAME.display(loc, amount, xOffset, yOffset, zOffset, speed);
 		}
 	}
 
@@ -257,7 +261,8 @@ public abstract class FireAbility extends ElementalAbility {
 	}
 
 	public static void playLightningbendingParticle(final Location loc, final double xOffset, final double yOffset, final double zOffset) {
-		GeneralMethods.displayColoredParticle("#01E1FF", loc, 1, xOffset, yOffset, zOffset);
+		ParticleEffect.CRIT_MAGIC.display(loc, 1, xOffset, yOffset, zOffset);
+		ParticleEffect.ELECTRIC_SPARK.display(loc, 1, xOffset, yOffset, zOffset);
 	}
 
 	public static void playLightningbendingSound(final Location loc) {
@@ -278,7 +283,6 @@ public abstract class FireAbility extends ElementalAbility {
 
 	public static void playLightningbendingChargingSound(final Location loc) {
 		if (getConfig().getBoolean("Properties.Fire.PlaySound")) {
-			final float volume = (float) getConfig().getDouble("Properties.Fire.LightningCharge.Volume");
 			final float pitch = (float) getConfig().getDouble("Properties.Fire.LightningCharge.Pitch");
 
 			Sound sound = Sound.BLOCK_BEEHIVE_WORK;
@@ -287,14 +291,13 @@ public abstract class FireAbility extends ElementalAbility {
 			} catch (final IllegalArgumentException exception) {
 				ProjectKorra.log.warning("Your current value for 'Properties.Fire.LightningCharge.Sound' is not valid.");
 			} finally {
-				loc.getWorld().playSound(loc, sound, volume, pitch);
+				loc.getWorld().playSound(loc, sound, 1, pitch);
 			}
 		}
 	}
 	
 	public static void playLightningbendingHitSound(final Location loc) {
 		if (getConfig().getBoolean("Properties.Fire.PlaySound")) {
-			final float volume = (float) getConfig().getDouble("Properties.Fire.LightningHit.Volume");
 			final float pitch = (float) getConfig().getDouble("Properties.Fire.LightningHit.Pitch");
 
 			Sound sound = Sound.ENTITY_LIGHTNING_BOLT_THUNDER;
@@ -303,8 +306,11 @@ public abstract class FireAbility extends ElementalAbility {
 			} catch (final IllegalArgumentException exception) {
 				ProjectKorra.log.warning("Your current value for 'Properties.Fire.LightningHit.Sound' is not valid.");
 			} finally {
-				loc.getWorld().playSound(loc, sound, volume, pitch);
+				loc.getWorld().playSound(loc, sound, 15, pitch);
 			}
+
+			sound = Sound.ENTITY_LIGHTNING_BOLT_IMPACT;
+			loc.getWorld().playSound(loc, sound, 1, 1);
 		}
 	}
 

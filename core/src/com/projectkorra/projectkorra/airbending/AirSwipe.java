@@ -60,6 +60,8 @@ public class AirSwipe extends AirAbility {
 	private Random random;
 	private Map<Vector, Location> streams;
 	private ArrayList<Entity> affectedEntities;
+	private boolean launched;
+	private boolean hit;
 
 	public AirSwipe(final Player player) {
 		this(player, false);
@@ -142,7 +144,7 @@ public class AirSwipe extends AirAbility {
 				BlockIterator blocks = new BlockIterator(this.getLocation().getWorld(), location.toVector(), direction, 0, (int) Math.ceil(direction.clone().multiply(speed).length()));
 
 				while (blocks.hasNext()) {
-					if(!checkLocation(blocks.next(), direction)) {
+					if(!checkLocation(blocks.next(), direction, location)) {
 						this.streams.remove(direction);
 						break;
 					}
@@ -165,12 +167,12 @@ public class AirSwipe extends AirAbility {
 			this.remove();
 		}
 	}
-	public boolean checkLocation(Block block, Vector direction) {
+	public boolean checkLocation(Block block, Vector direction, Location location) {
 		if (GeneralMethods.checkDiagonalWall(block.getLocation(), direction) || !block.isPassable()) {
 			return false;
 		}  else {
-			if (block.getLocation().distanceSquared(this.origin) > this.range * this.range || GeneralMethods.isRegionProtectedFromBuild(this, block.getLocation())) {
-				this.streams.clear();
+			if (location.distanceSquared(this.origin) > this.range * this.range || GeneralMethods.isRegionProtectedFromBuild(this, block.getLocation())) {
+				return false;
 			} else {
 				if (!ElementalAbility.isTransparent(this.player, block) || !block.isPassable()) {
 					return false;
@@ -207,6 +209,17 @@ public class AirSwipe extends AirAbility {
 		}
 		return true;
 	}
+
+	@Override
+	public void remove() {
+		//if (launched && !hit) {
+		//	player.sendMessage("penalty airswipe miss");
+		//} else if (!launched){
+		//	player.sendMessage("penalty airswipe cd");
+		//}
+		super.remove();
+	}
+
 	private void affectPeople(final Location location, final Vector direction) {
 		final List<Entity> entities = GeneralMethods.getEntitiesAroundPoint(location, this.radius);
 		final Vector fDirection = direction.clone();
@@ -238,6 +251,12 @@ public class AirSwipe extends AirAbility {
 							GeneralMethods.setVelocity(AirSwipe.this, entity, fDirection.multiply(AirSwipe.this.pushFactor));
 						}
 						if (!AirSwipe.this.affectedEntities.contains(entity)) {
+
+							if (!hit) {
+								//player.sendMessage("reward airswipe hit");
+								hit = true;
+							}
+
 							if (AirSwipe.this.damage != 0) {
 								DamageHandler.damageEntity(entity, AirSwipe.this.damage, abil);
 							}
@@ -264,6 +283,8 @@ public class AirSwipe extends AirAbility {
 			this.streams.put(direction.clone().multiply(Math.cos(angle))
 					.add(xz.clone().multiply(Math.sin(angle))).normalize(), this.origin);
 		}
+
+		launched = true;
 	}
 
 	@Override

@@ -37,6 +37,7 @@ public class FireComboStream extends BukkitRunnable {
 	private boolean singlePoint;
 	private int density;
 	private int checkCollisionDelay;
+	private boolean disableLight;
 	private int checkCollisionCounter;
 	private float spread;
 	private double collisionRadius;
@@ -238,6 +239,10 @@ public class FireComboStream extends BukkitRunnable {
 		this.singlePoint = b;
 	}
 
+	public void setDisableLight(boolean disableLight) {
+		this.disableLight = disableLight;
+	}
+
 	public void setSpread(final float spread) {
 		this.spread = spread;
 	}
@@ -248,6 +253,7 @@ public class FireComboStream extends BukkitRunnable {
 
 	public void emitFirebendingLight(final Location location) {
 		if (!ConfigManager.defaultConfig.get().getBoolean("Properties.Fire.DynamicLight.Enabled")) return;
+		if (disableLight) return;
 
 		int brightness = ConfigManager.defaultConfig.get().getInt("Properties.Fire.DynamicLight.Brightness");
 		long keepAlive = ConfigManager.defaultConfig.get().getLong("Properties.Fire.DynamicLight.KeepAlive");

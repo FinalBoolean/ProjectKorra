@@ -47,6 +47,7 @@ public class AirSweep extends AirAbility implements ComboAbility {
 	private ArrayList<Entity> affectedEntities;
 	private ArrayList<BukkitRunnable> tasks;
 	private double radius;
+	private int activationTicks;
 
 	public AirSweep(final Player player) {
 		super(player);
@@ -59,6 +60,7 @@ public class AirSweep extends AirAbility implements ComboAbility {
 		}
 
 		if (this.bPlayer.isOnCooldown(this)) {
+			//player.sendMessage("penalty airsweep cd");
 			return;
 		}
 
@@ -68,9 +70,12 @@ public class AirSweep extends AirAbility implements ComboAbility {
 		this.knockback = getConfig().getDouble("Abilities.Air.AirSweep.Knockback");
 		this.cooldown = getConfig().getLong("Abilities.Air.AirSweep.Cooldown");
 		this.radius = getConfig().getDouble("Abilities.Air.AirSweep.Radius");
+		this.radius = getConfig().getDouble("Abilities.Air.AirSweep.Radius");
+		this.activationTicks = getConfig().getInt("Abilities.Air.AirSweep.ActivationTicks");
 
 		this.bPlayer.addCooldown(this);
 		this.start();
+		//player.sendMessage("reward airsweep start");
 	}
 
 	@Override
@@ -131,15 +136,15 @@ public class AirSweep extends AirAbility implements ComboAbility {
 
 		if (this.origin == null) {
 			this.direction = this.player.getEyeLocation().getDirection().normalize();
-			this.origin = GeneralMethods.getMainHandLocation(player).add(this.direction.clone().multiply(10));
+			this.origin = player.getLocation().add(this.direction.clone().multiply(10));
 		}
-		if (this.progressCounter < 8) {
+		if (this.progressCounter < activationTicks) {
 			return;
 		}
 		if (this.destination == null) {
-			this.destination = GeneralMethods.getMainHandLocation(player).add(GeneralMethods.getMainHandLocation(player).getDirection().normalize().multiply(10));
+			this.destination = this.player.getLocation().add(player.getEyeLocation().getDirection().normalize().multiply(10));
 			final Vector origToDest = GeneralMethods.getDirection(this.origin, this.destination);
-			final Location hand = GeneralMethods.getMainHandLocation(player);
+			final Location hand = player.getLocation();
 			for (double i = 0; i < 30; i++) {
 				final Location endLoc = this.origin.clone().add(origToDest.clone().multiply(i / 30));
 				if (GeneralMethods.locationEqualsIgnoreDirection(hand, endLoc)) {
@@ -150,6 +155,7 @@ public class AirSweep extends AirAbility implements ComboAbility {
 				final FireComboStream fs = new FireComboStream(this.player, this, vec, hand, this.range, this.speed);
 				fs.setDensity(1);
 				fs.setSpread(0F);
+				fs.setDisableLight(true);
 				fs.setUseNewParticles(true);
 				fs.setParticleEffect(getAirbendingParticles());
 				fs.setCollides(false);
@@ -194,13 +200,15 @@ public class AirSweep extends AirAbility implements ComboAbility {
 					}
 					if (!entity.equals(this.player) && !(entity instanceof Player && Commands.invincible.contains(((Player) entity).getName()))) {
 						if (this.knockback != 0) {
-							final Vector force = fstream.getLocation().getDirection();
+							final Vector force = fstream.getDirection();
 							GeneralMethods.setVelocity(this, entity, force.clone().multiply(this.knockback));
 							new HorizontalVelocityTracker(entity, this.player, 200l, this);
 							entity.setFallDistance(0);
 						}
 						if(!this.affectedEntities.contains(entity)) {
 							this.affectedEntities.add(entity);
+							//player.sendMessage("reward airsweep hit");
+
 							if (this.damage != 0) {
 								if (entity instanceof LivingEntity) {
 									DamageHandler.damageEntity(entity, this.damage, this);
@@ -220,6 +228,10 @@ public class AirSweep extends AirAbility implements ComboAbility {
 
 	@Override
 	public void remove() {
+		if (this.affectedEntities.isEmpty()) {
+			//player.sendMessage("penalty airsweep hit");
+		}
+
 		super.remove();
 		for (final BukkitRunnable task : this.tasks) {
 			task.cancel();

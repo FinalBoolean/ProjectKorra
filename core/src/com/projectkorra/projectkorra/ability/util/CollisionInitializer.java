@@ -158,6 +158,7 @@ public class CollisionInitializer {
 		}
 
 		this.collisionManager.addCollision(new Collision(airSwipe, airSwipe, false, false));
+		this.collisionManager.addCollision(new Collision(airSwipe, airSweep, false, false));
 
 		this.collisionManager.addCollision(new Collision(airShield, airSwipe, false, false));
 		this.collisionManager.addCollision(new Collision(airShield, airSweep, false, false));

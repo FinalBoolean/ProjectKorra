@@ -1,5 +1,6 @@
 package com.projectkorra.projectkorra.waterbending.passive;
 
+import com.projectkorra.projectkorra.BendingPlayer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -38,6 +39,10 @@ public class HydroSink extends WaterAbility implements PassiveAbility {
 		}
 
 		return false;
+	}
+
+	public static double getRegenFactor() {
+		return ConfigManager.getConfig().getDouble("Abilities.Water.Passive.RegenFactor");
 	}
 
 	@Override

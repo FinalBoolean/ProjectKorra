@@ -49,6 +49,11 @@ public class AirSpout extends AirAbility {
 		this.interval = getConfig().getLong("Abilities.Air.AirSpout.Interval");
 		this.height = getConfig().getDouble("Abilities.Air.AirSpout.Height");
 
+		AirBlast airBlast = getAbility(player, AirBlast.class);
+		if (airBlast != null) {
+			airBlast.remove();
+		}
+
 		final double heightRemoveThreshold = 2;
 		if (!this.isWithinMaxSpoutHeight(heightRemoveThreshold)) {
 			return;
@@ -163,7 +168,6 @@ public class AirSpout extends AirAbility {
 			if (dy > this.height) {
 				this.removeFlight();
 			} else {
-				bPlayer.setQueueAirBlastStop(true);
 				this.allowFlight();
 			}
 			this.rotateAirColumn(block);
@@ -175,7 +179,6 @@ public class AirSpout extends AirAbility {
 	@Override
 	public void remove() {
 		super.remove();
-		bPlayer.setQueueAirBlastStop(false);
 		this.flightHandler.removeInstance(this.player, this.getName());
 	}
 

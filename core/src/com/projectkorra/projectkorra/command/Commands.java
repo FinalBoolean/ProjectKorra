@@ -127,6 +127,5 @@ public class Commands {
 		new WhoCommand();
 		new CooldownCommand();
 		new TempCommand();
-		new ModeCommand();
 	}
 }

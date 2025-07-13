@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.projectkorra.projectkorra.ProjectKorra;
 import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -51,6 +52,7 @@ public class FireBlastCharged extends FireAbility {
 	private double damageRadius;
 	@Attribute("Explosion" + Attribute.RADIUS) @DayNightFactor
 	private double explosionRadius;
+	private double speed;
 	private double innerRadius;
 	@Attribute(Attribute.FIRE_TICK) @DayNightFactor
 	private double fireTicks;
@@ -58,6 +60,7 @@ public class FireBlastCharged extends FireAbility {
 	private Location origin;
 	private Location location;
 	private Vector direction;
+	private double speedFactor;
 
 	public FireBlastCharged(final Player player) {
 		super(player);
@@ -80,6 +83,7 @@ public class FireBlastCharged extends FireAbility {
 		this.range = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.Range");
 		this.damageRadius = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.DamageRadius");
 		this.explosionRadius = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.ExplosionRadius");
+		this.speed = getConfig().getDouble("Abilities.Fire.FireBlast.Speed");
 		this.fireTicks = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.FireTicks");
 		this.innerRadius = this.damageRadius / 2;
 
@@ -263,7 +267,7 @@ public class FireBlastCharged extends FireAbility {
 			this.launched = true;
 			this.location = this.player.getEyeLocation();
 			this.origin = this.location.clone();
-			this.direction = this.location.getDirection().normalize().multiply(this.collisionRadius);
+			this.direction = this.location.getDirection().normalize().multiply(this.collisionRadius/2);
 		}
 
 		if (System.currentTimeMillis() > this.time + this.interval) {
@@ -289,20 +293,23 @@ public class FireBlastCharged extends FireAbility {
 				this.explode();
 				return;
 			}
-			this.location = this.location.clone().add(this.direction);
-			if (this.location.distanceSquared(this.origin) > this.range * this.range) {
-				this.remove();
-				return;
-			}
 
-			if (GeneralMethods.isSolid(this.location.getBlock())) {
-				this.explode();
-				return;
-			} else if (this.location.getBlock().isLiquid()) {
-				this.remove();
-				return;
+			for (double i = 0; i < collisionRadius; i += collisionRadius/2) {
+				this.location = this.location.clone().add(this.direction);
+				if (this.location.distanceSquared(this.origin) > this.range * this.range) {
+					this.remove();
+					return;
+				}
+
+				if (GeneralMethods.isSolid(this.location.getBlock())) {
+					this.explode();
+					return;
+				} else if (this.location.getBlock().isLiquid()) {
+					this.remove();
+					return;
+				}
+				if (i >= collisionRadius / 2) this.executeFireball();
 			}
-			this.executeFireball();
 		}
 	}
 

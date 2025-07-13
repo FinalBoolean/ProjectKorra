@@ -78,6 +78,11 @@ public class BendingPlayer extends OfflineBendingPlayer {
 	protected boolean chiBlocked;
 	private boolean stopFallDmg;
 	private boolean queueAirBlastStop;
+	private double airBlastDecay;
+	private long lastAirBlastTime;
+	private long lastAirBlastReward;
+	private boolean scooterReward;
+	private long lastHealthRegen;
 
 	public BendingPlayer(Player player) {
 		super(player);
@@ -983,4 +988,48 @@ public class BendingPlayer extends OfflineBendingPlayer {
     public void setQueueAirBlastStop(boolean queueAirBlastStop) {
         this.queueAirBlastStop = queueAirBlastStop;
     }
+
+	public void increaseAirBlastDecay(final double amount, final double minimum) {
+		airBlastDecay = Math.max(minimum, airBlastDecay - amount);
+	}
+
+	public void resetAirBlastDecay() {
+		airBlastDecay = 1;
+	}
+
+	public double getAirBlastDecay() {
+		return airBlastDecay;
+	}
+
+	public void resetAirBlast() {
+		lastAirBlastTime = System.currentTimeMillis();
+	}
+
+	public long getLastAirBlastTime() {
+		return lastAirBlastTime;
+	}
+
+	public long getLastAirBlastReward() {
+		return lastAirBlastReward;
+	}
+
+	public void resetAirBlastReward() {
+		lastAirBlastReward = System.currentTimeMillis();
+	}
+
+	public boolean isScooterReward() {
+		return scooterReward;
+	}
+
+	public void setScooterReward(boolean scooterReward) {
+		this.scooterReward = scooterReward;
+	}
+
+	public void setLastHealthRegen(long lastHealthRegen) {
+		this.lastHealthRegen = lastHealthRegen;
+	}
+
+	public long getLastHealthRegen() {
+		return lastHealthRegen;
+	}
 }

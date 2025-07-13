@@ -721,6 +721,8 @@ public class ConfigManager {
 			final ArrayList<String> snowBlocks = new ArrayList<>();
 			snowBlocks.add("#snow"); // added in 1.17
 
+			config.addDefault("Properties.Regen.HealthPerTick", 1);
+			config.addDefault("Properties.Regen.Interval", 8);
 			config.addDefault("Properties.UpdateChecker", true);
 			config.addDefault("Properties.Statistics", true);
 			config.addDefault("Properties.DatabaseCooldowns", true);
@@ -846,7 +848,8 @@ public class ConfigManager {
 				migrateAvatarState();
 			}
 
-			config.addDefault("Abilities.Air.Passive.Factor", 0.3);
+			config.addDefault("Abilities.Air.Passive.Factor", 1.3);
+			config.addDefault("Abilities.Air.Passive.RegenFactor", 0.3);
 			config.addDefault("Abilities.Air.Passive.AirAgility.Enabled", true);
 			config.addDefault("Abilities.Air.Passive.AirAgility.JumpPower", 3);
 			config.addDefault("Abilities.Air.Passive.AirAgility.SpeedPower", 2);
@@ -854,19 +857,25 @@ public class ConfigManager {
 			config.addDefault("Abilities.Air.Passive.GracefulDescent.Enabled", true);
 
 			config.addDefault("Abilities.Air.AirBlast.Enabled", true);
-			config.addDefault("Abilities.Air.AirBlast.Speed", 15);
+			config.addDefault("Abilities.Air.AirBlast.FallDamageOthers", false);
+			config.addDefault("Abilities.Air.AirBlast.Speed", 25);
 			config.addDefault("Abilities.Air.AirBlast.Range", 20);
-			config.addDefault("Abilities.Air.AirBlast.Radius", .5);
+			config.addDefault("Abilities.Air.AirBlast.Radius", 2);
 			config.addDefault("Abilities.Air.AirBlast.SelectRange", 10);
 			config.addDefault("Abilities.Air.AirBlast.SelectParticles", 4);
 			config.addDefault("Abilities.Air.AirBlast.Particles", 6);
 			config.addDefault("Abilities.Air.AirBlast.Cooldown", 500);
-			config.addDefault("Abilities.Air.AirBlast.Push.Self", 2.0);
-			config.addDefault("Abilities.Air.AirBlast.Push.Entities", 1.6);
+			config.addDefault("Abilities.Air.AirBlast.SourceYOffset", 0);
+			config.addDefault("Abilities.Air.AirBlast.MaxSelectGroundDistance", 0);
+			config.addDefault("Abilities.Air.AirBlast.Push.Self", 2.5);
+			config.addDefault("Abilities.Air.AirBlast.Push.Entities", 3.5);
 			config.addDefault("Abilities.Air.AirBlast.CanFlickLevers", true);
 			config.addDefault("Abilities.Air.AirBlast.CanOpenDoors", true);
 			config.addDefault("Abilities.Air.AirBlast.CanPressButtons", true);
 			config.addDefault("Abilities.Air.AirBlast.CanCoolLava", true);
+			config.addDefault("Abilities.Air.AirBlast.DecayAmount", 0.20);
+			config.addDefault("Abilities.Air.AirBlast.DecayMinimum", 0.20);
+			config.addDefault("Abilities.Air.AirBlast.MinimumAirBlastTime", 700);
 
 			config.addDefault("Abilities.Air.AirBurst.Enabled", true);
 			config.addDefault("Abilities.Air.AirBurst.FallThreshold", 10);
@@ -886,6 +895,9 @@ public class ConfigManager {
 			config.addDefault("Abilities.Air.AirScooter.Radius", 1);
 			config.addDefault("Abilities.Air.AirScooter.Cooldown", 7000);
 			config.addDefault("Abilities.Air.AirScooter.Duration", 0);
+			config.addDefault("Abilities.Air.AirScooter.Push.Down", -0.125);
+			config.addDefault("Abilities.Air.AirScooter.Push.Up", 0.125);
+			config.addDefault("Abilities.Air.AirScooter.Push.Cap", 0.3);
 			config.addDefault("Abilities.Air.AirScooter.MaxHeightFromGround", 7);
 
 			config.addDefault("Abilities.Air.AirShield.Enabled", true);
@@ -990,8 +1002,10 @@ public class ConfigManager {
 			config.addDefault("Abilities.Air.AirSweep.Knockback", 3.5);
 			config.addDefault("Abilities.Air.AirSweep.Cooldown", 6000);
 			config.addDefault("Abilities.Air.AirSweep.Radius", 1);
+			config.addDefault("Abilities.Air.AirSweep.ActivationTicks", 5);
 			config.addDefault("Abilities.Air.AirSweep.Combination", Arrays.asList("AirSwipe:LEFT_CLICK", "AirSwipe:LEFT_CLICK", "AirBurst:SNEAK_DOWN", "AirBurst:LEFT_CLICK"));
 
+			config.addDefault("Abilities.Air.Passive.Factor", 1.3);
 			config.addDefault("Abilities.Water.Passive.FastSwim.Enabled", true);
 			config.addDefault("Abilities.Water.Passive.FastSwim.Cooldown", 0);
 			config.addDefault("Abilities.Water.Passive.FastSwim.Duration", 0);
@@ -1570,6 +1584,7 @@ public class ConfigManager {
 			config.addDefault("Abilities.Fire.Lightning.MaxCopperArcs", 8);
 			config.addDefault("Abilities.Fire.Lightning.SelfHitWater", true);
 			config.addDefault("Abilities.Fire.Lightning.SelfHitClose", false);
+			config.addDefault("Abilities.Fire.Lightning.RedirectionDuration", 2500);
 			config.addDefault("Abilities.Fire.Lightning.ArcOnIce", false);
 			config.addDefault("Abilities.Fire.Lightning.ArcOnCopper", true);
 			config.addDefault("Abilities.Fire.Lightning.AllowOnFireJet", true);

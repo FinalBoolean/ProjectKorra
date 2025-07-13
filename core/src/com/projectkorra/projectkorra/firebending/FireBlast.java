@@ -129,7 +129,18 @@ public class FireBlast extends FireAbility {
 		}
 
 		if (this.showParticles) {
-			playFirebendingParticles(this.location, 6, this.flameRadius, this.flameRadius, this.flameRadius);
+			// Creates a realistic burn-out effect on the fire-blast.
+			double dynamicFactor = (double) ticks / 50;
+
+			double angle = ticks * 0.2;
+
+			double xOffset = Math.cos(angle) * this.flameRadius;
+			double zOffset = Math.sin(angle) * this.flameRadius;
+
+			double particleSpeed = 0.08 - (dynamicFactor * 0.1);
+			int particleCount = Math.max(1, (int) (6 * Math.exp(-dynamicFactor)));
+
+			playFirebendingParticles(this.location, particleCount, xOffset, this.flameRadius, zOffset, particleSpeed);
 		}
 
 		emitFirebendingLight(this.location);

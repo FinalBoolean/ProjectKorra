@@ -1379,6 +1379,7 @@ public class GeneralMethods {
 		ProjectKorra.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new WaterbendingManager(ProjectKorra.plugin), 0, 1);
 		ProjectKorra.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new EarthbendingManager(ProjectKorra.plugin), 0, 1);
 		ProjectKorra.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new FirebendingManager(ProjectKorra.plugin), 0, 1);
+		ProjectKorra.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new RegenHandler(ProjectKorra.plugin), 0, 20);
 		ProjectKorra.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new ChiblockingManager(ProjectKorra.plugin), 0, 1);
 		ProjectKorra.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(ProjectKorra.plugin, new BendingManager.TempElementsRunnable(), 20, 20);
 		ProjectKorra.plugin.revertChecker = ProjectKorra.plugin.getServer().getScheduler().runTaskTimerAsynchronously(ProjectKorra.plugin, new RevertChecker(ProjectKorra.plugin), 0, 200);
@@ -1855,6 +1856,10 @@ public class GeneralMethods {
 	}
 	
 	public static void setVelocity(Ability ability, Entity entity, Vector vector) {
+		if (entity instanceof FallingBlock) {
+			return;
+		}
+
 		final AbilityVelocityAffectEntityEvent event = new AbilityVelocityAffectEntityEvent(ability, entity, vector);
 		Bukkit.getServer().getPluginManager().callEvent(event);
 		if (event.isCancelled()) 
@@ -1916,5 +1921,18 @@ public class GeneralMethods {
 			}
 		}
 		return major * 1000 + minor * 10 + fix; //1.16.4 -> 1164; 1.18 -> 1180
+	}
+
+	public static Block getGroundBlock(Location location, double maxDistance) {
+		Block block = null;
+		for (int i = 0; maxDistance > 1 && i <= (int) maxDistance; i++) {
+			block = location.clone().subtract(0, i, 0).getBlock();
+			if (GeneralMethods.isSolid(block)) return block;
+		}
+
+		block = location.clone().subtract(0, maxDistance, 0).getBlock();
+		if (GeneralMethods.isSolid(block)) return block;
+
+		return null;
 	}
 }

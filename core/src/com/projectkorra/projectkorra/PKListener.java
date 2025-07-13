@@ -167,26 +167,8 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.FluidLevelChangeEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageByBlockEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
-import org.bukkit.event.entity.EntityTeleportEvent;
-import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.entity.ItemMergeEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.entity.ProjectileLaunchEvent;
-import org.bukkit.event.entity.SlimeSplitEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -1530,6 +1512,17 @@ public class PKListener implements Listener {
 				}, 1L);
 	}
 
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onEntityRegen(EntityRegainHealthEvent event) {
+		if (!(event.getEntity() instanceof Player)) {
+			return;
+		}
+
+		if (event.getRegainReason() != EntityRegainHealthEvent.RegainReason.CUSTOM) {
+			event.setCancelled(true);
+		}
+	}
+
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPlayerSneak(final PlayerToggleSneakEvent event) {
 		final Player player = event.getPlayer();
@@ -1978,7 +1971,7 @@ public class PKListener implements Listener {
 					} else if (abil.equalsIgnoreCase("FireBurst")) {
 						FireBurst.coneBurst(player);
 					} else if (abil.equalsIgnoreCase("FireShield")) {
-						new FireShield(player);
+						//new FireShield(player);
 					} else if (abil.equalsIgnoreCase("WallOfFire")) {
 						new WallOfFire(player);
 					} else if (abil.equalsIgnoreCase("Combustion")) {

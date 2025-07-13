@@ -12,21 +12,15 @@ import com.projectkorra.projectkorra.ability.CoreAbility;
 import com.projectkorra.projectkorra.attribute.markers.DayNightFactor;
 import com.projectkorra.projectkorra.firebending.FireJet;
 import com.projectkorra.projectkorra.region.RegionProtection;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+import com.projectkorra.projectkorra.util.ParticleEffect;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.AnaloguePowerable;
 import org.bukkit.block.data.Powerable;
-import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.MushroomCow;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -106,6 +100,7 @@ public class Lightning extends LightningAbility {
 	private ArrayList<BukkitRunnable> tasks;
 	private ArrayList<Location> locations;
 	private Block[] chargedCopperBlocks;
+	private long redirectionDuration;
 	private static final Set<EntityType> LIGHTNING_AFFECTED = Sets.newHashSet(EntityType.CREEPER, EntityType.VILLAGER,
 			EntityType.PIG, EntityType.MUSHROOM_COW, EntityType.TURTLE, EntityType.SKELETON_HORSE
 	);
@@ -154,9 +149,13 @@ public class Lightning extends LightningAbility {
 		this.allowOnFireJet = getConfig().getBoolean("Abilities.Fire.Lightning.AllowOnFireJet");
 		this.transformMobs = getConfig().getBoolean("Abilities.Fire.Lightning.TransformMobs");
 		this.chargeCreeper = getConfig().getBoolean("Abilities.Fire.Lightning.ChargeCreeper");
+		this.redirectionDuration = getConfig().getLong("Abilities.Fire.Lightning.RedirectionDuration");
 		this.chainLightningRods = getConfig().getBoolean("Abilities.Fire.Lightning.ChainLightningRods");
 		
 		this.chargedCopperBlocks = new Block[this.maxCopperArcs];
+
+		playLightningbendingHitSound(player.getLocation());
+		ParticleEffect.FLASH.display(player.getLocation(), 1);
 
 		this.start();
 	}
@@ -437,15 +436,34 @@ public class Lightning extends LightningAbility {
 
 			if (this.charged) {
 				if (this.player.isSneaking()) {
-					final Location loc = this.player.getEyeLocation().add(this.player.getEyeLocation().getDirection().normalize().multiply(1.2));
-					loc.add(0, 0.3, 0);
-					playLightningbendingParticle(loc, 0.2F, 0.2F, 0.2F);
-					emitFirebendingLight(loc);
-					if (ThreadLocalRandom.current().nextDouble() < .2) {
-						playLightningbendingChargingSound(loc);
+					Location eyeLoc = player.getEyeLocation();
+					Vector direction = eyeLoc.getDirection().normalize();
+					Location center = eyeLoc.clone().add(direction.clone().multiply(1.2));
+					center.add(0, 0.3, 0);
+
+					int points = 16;
+					double radius = 1;
+
+					Vector right = direction.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+					Vector up = right.clone().crossProduct(direction).normalize();
+
+					for (int i = 0; i < points; i++) {
+						double angle = 2 * Math.PI * i / points;
+						Vector offset = right.clone().multiply(Math.cos(angle)).add(up.clone().multiply(Math.sin(angle))).multiply(radius);
+						Location particleLoc = center.clone().add(offset);
+
+						player.getWorld().spawnParticle(Particle.CRIT_MAGIC, particleLoc, 0, 0, 0, 0);
 					}
-					
+
+					ParticleEffect.END_ROD.display(center, 1, 0.2F, 0.2F, 0.2F);
+					emitFirebendingLight(center);
+					if (ThreadLocalRandom.current().nextDouble() < .2) {
+						playLightningbendingChargingSound(center);
+					}
+
+					player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_CREEPER_PRIMED, 15F, 2f);
 				} else {
+					player.getLocation().getWorld().playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 15F, 0.9f);
 					this.state = State.MAINBOLT;
 					this.bPlayer.addCooldown(this);
 					final Entity target = GeneralMethods.getTargetedEntity(this.player, this.range);
@@ -478,13 +496,14 @@ public class Lightning extends LightningAbility {
 			} else {
 				if (!this.player.isSneaking()) {
 					this.remove();
+					bPlayer.addCooldown(this);
 					return;
 				}
 
 				final Location localLocation1 = this.player.getLocation();
 				final double d1 = 0.1570796326794897D;
 				final double d2 = 0.06283185307179587D;
-				final double d3 = 1.0D;
+				final double d3 = 0.25D;
 				final double d4 = 1.0D;
 				final double d5 = d1 * this.particleRotation;
 				final double d6 = d2 * this.particleRotation;
@@ -492,7 +511,7 @@ public class Lightning extends LightningAbility {
 				final double d8 = localLocation1.getZ() + d4 * Math.sin(d5);
 				final double newY = (localLocation1.getY() + 1.0D + d4 * Math.cos(d6));
 				final Location localLocation2 = new Location(this.player.getWorld(), d7, newY, d8);
-				playLightningbendingParticle(localLocation2);
+				playLightningbendingParticle(localLocation2, 0.1, 0.1, 0.1);
 				emitFirebendingLight(localLocation2);
 				this.particleRotation += 1.0D / d3;
 				if (ThreadLocalRandom.current().nextDouble() < .2) {
@@ -779,7 +798,10 @@ public class Lightning extends LightningAbility {
 		 */
 		@Override
 		public void run() {
-			playLightningbendingParticle(this.location, 0F, 0F, 0F);
+			if (ThreadLocalRandom.current().nextDouble() < .1) {
+				playLightningbendingParticle(this.location, 0.1F, 0.1F, 0.1F);
+				ParticleEffect.FLASH.display(player.getLocation(), 1);
+			}
 			emitFirebendingLight(this.location);
 
 			this.count++;
@@ -796,6 +818,8 @@ public class Lightning extends LightningAbility {
 				
 				if (!Lightning.this.isTransparentForLightning(Lightning.this.player, this.location.getBlock()) && !isCopper(this.location.getBlock()) && !isLightningRod(this.location.getBlock())) {
 					this.arc.cancel();
+					ParticleEffect.FLASH.display(this.location, 1);
+					playLightningbendingHitSound(this.location);
 					return;
 				} else if (isLightningRod(this.location.getBlock())) {
 					if (Lightning.this.state != State.CHAIN) {
@@ -809,6 +833,7 @@ public class Lightning extends LightningAbility {
 					}
 				}
 				final Block block = this.location.getBlock();
+
 				// We only want to consider this particle as part of the location on the its first tick, when it actually does the electrocution.
 				// The later ticks are just for visual purposes.
 				Lightning.this.locations.add(block.getLocation());
@@ -852,6 +877,7 @@ public class Lightning extends LightningAbility {
 						final LivingEntity lent = (LivingEntity) entity;
 						if (lent instanceof Player) {
 							playLightningbendingSound(lent.getLocation());
+							ParticleEffect.FLASH.display(this.location, 1);
 							playLightningbendingSound(Lightning.this.player.getLocation());
 							final Player p = (Player) lent;
 							final Lightning light = getAbility(p, Lightning.class);
@@ -859,6 +885,9 @@ public class Lightning extends LightningAbility {
 								light.charged = true;
 								Lightning.this.remove();
 								return;
+							} else {
+								playLightningbendingSound(Lightning.this.player.getLocation());
+								playLightningbendingSound(lent.getLocation());
 							}
 						}
 						

@@ -105,9 +105,6 @@ public class EarthSmash extends EarthAbility {
 
 			EarthSmash grabbedSmash = this.aimingAtSmashCheck(player, State.LIFTED);
 			if (grabbedSmash == null) {
-				if (this.bPlayer.isOnCooldown(this)) {
-					return;
-				}
 				grabbedSmash = this.aimingAtSmashCheck(player, State.SHOT);
 			}
 
@@ -456,7 +453,7 @@ public class EarthSmash extends EarthAbility {
 			final BlockRepresenter brep = this.currentBlocks.get(i);
 			final Block block = this.location.clone().add(brep.getX(), brep.getY(), brep.getZ()).getBlock();
 			// Check for grass because sometimes the dirt turns into grass.
-			if (block.getType() != brep.getType() && (block.getType() != Material.GRASS) && (block.getType() != Material.COBBLESTONE)) {
+			if (block.getType() != brep.getType() && (block.getType() != Material.GRASS_BLOCK) && (block.getType() != Material.COBBLESTONE)) {
 				this.currentBlocks.remove(i);
 				i--;
 			}
@@ -687,7 +684,7 @@ public class EarthSmash extends EarthAbility {
 		}
 	}
 
-	public class Pair<F, S> {
+	public static class Pair<F, S> {
 		private F first; // first member of pair.
 		private S second; // second member of pair.
 

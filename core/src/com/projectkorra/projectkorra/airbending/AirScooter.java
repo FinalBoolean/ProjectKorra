@@ -38,6 +38,9 @@ public class AirScooter extends AirAbility {
 	private ArrayList<Double> angles;
 	private Slime slime;
 	private Boolean useslime;
+	private double downPush;
+	private double upPush;
+	private double cap;
 
 	private double phi = 0;
 
@@ -59,8 +62,17 @@ public class AirScooter extends AirAbility {
 		this.duration = getConfig().getLong("Abilities.Air.AirScooter.Duration");
 		this.maxHeightFromGround = getConfig().getDouble("Abilities.Air.AirScooter.MaxHeightFromGround");
 		this.useslime = getConfig().getBoolean("Abilities.Air.AirScooter.ShowSitting");
+		this.downPush = getConfig().getDouble("Abilities.Air.AirScooter.Push.Down");
+		this.upPush = getConfig().getDouble("Abilities.Air.AirScooter.Push.Up");
+		this.cap = getConfig().getDouble("Abilities.Air.AirScooter.Push.Cap");
+
 		this.random = new Random();
 		this.angles = new ArrayList<>();
+
+		AirBlast airBlast = getAbility(player, AirBlast.class);
+		if (airBlast != null) {
+			airBlast.remove();
+		}
 
 		this.getFloor();
 		if (this.floorblock == null) {
@@ -179,6 +191,12 @@ public class AirScooter extends AirAbility {
 			}
 			this.spinScooter();
 		}
+
+		if (!bPlayer.isScooterReward() && System.currentTimeMillis() - bPlayer.getLastAirBlastReward() < 1000 && System.currentTimeMillis() - bPlayer.getLastAirBlastReward() > 100) {
+			bPlayer.setScooterReward(true);
+			//player.sendMessage("reward airscooter");
+		}
+
 		/*
 		 * Checks for how far the ground is away from the player it elevates or
 		 * lowers the player based on their distance from the ground.
@@ -186,9 +204,9 @@ public class AirScooter extends AirAbility {
 		double distance = this.player.getLocation().getY() - (double)this.floorblock.getY();
 		double dX = this.bPlayer.getAirBlastType() == AirBlastType.LEGACY ? Math.abs(distance - 2.4) : 1.0;
 		if (distance > 2.75) {
-			velocity.setY(-0.25 * dX * dX);
+			velocity.setY(Math.max(-cap, downPush * dX * dX));
 		} else if (distance < 2.0) {
-			velocity.setY(0.25 * dX * dX);
+			velocity.setY(Math.min(cap, upPush * dX * dX));
 		} else {
 			velocity.setY(0);
 		}

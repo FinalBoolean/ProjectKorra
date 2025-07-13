@@ -2,6 +2,7 @@ package com.projectkorra.projectkorra;
 
 import com.projectkorra.projectkorra.ability.Ability;
 import com.projectkorra.projectkorra.ability.CoreAbility;
+import com.projectkorra.projectkorra.ability.WaterAbility;
 import com.projectkorra.projectkorra.ability.util.MultiAbilityManager;
 import com.projectkorra.projectkorra.command.CooldownCommand;
 import com.projectkorra.projectkorra.configuration.ConfigManager;
@@ -81,7 +82,7 @@ public class OfflineBendingPlayer {
     private long lastAccessed;
     private long uncacheTime = 30_000; //This is the default time to unload after when the data is accessed by code, NOT when logging out
     private BukkitTask uncache;
-    private AirBlastType airBlastType = AirBlastType.BENDERS_MC;
+    private AirBlastType airBlastType = AirBlastType.LEGACY;
 
     public OfflineBendingPlayer(@NotNull OfflinePlayer player) {
         this.player = player;
@@ -387,7 +388,7 @@ public class OfflineBendingPlayer {
                     }
 
                     try (ResultSet rs = DBConnection.sql.readQuery("SELECT * FROM pk_air_type WHERE uuid = '" + uuid + "'")) {
-                        if (rs.next()) {
+                        if (rs != null && rs.next()) {
                             int airTypeOrdinal = rs.getInt("air_type");
                             bPlayer.airBlastType = AirBlastType.values()[airTypeOrdinal];
                         } else {
@@ -735,7 +736,38 @@ public class OfflineBendingPlayer {
      * @param element The element to add.
      */
     public void addElement(final Element element) {
+        String rank = getCurrentRankElement(elements);
         this.elements.add(element);
+        String newRank = getCurrentRankElement(elements);
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " parent remove " + rank);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " parent add " + newRank);
+    }
+
+    public String getCurrentRankElement(List<Element> elements) {
+        if (elements.isEmpty()) {
+            return "None";
+        }
+
+        if (elements.size() > 1) {
+            return "multi";
+        }
+
+        Element currentElement = elements.get(0);
+
+        if (currentElement == Element.AIR) {
+            return "air";
+        } else if (currentElement == Element.FIRE) {
+            return "fire";
+        } else if (currentElement == Element.CHI) {
+            return "chi";
+        } else if (currentElement == Element.WATER) {
+            return "water";
+        } else if (currentElement == Element.EARTH) {
+            return "earth";
+        }
+
+        return "none";
     }
 
     /**
@@ -1060,8 +1092,15 @@ public class OfflineBendingPlayer {
      * @param element The element to set
      */
     public void setElement(@NotNull final Element element) {
+        String rank = getCurrentRankElement(elements);
+
         this.elements.clear();
         this.elements.add(element);
+
+        String newRank = getCurrentRankElement(elements);
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " parent remove " + rank);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + " parent add " + newRank);
     }
 
     /**

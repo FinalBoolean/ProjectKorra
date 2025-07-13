@@ -1,5 +1,6 @@
 package com.projectkorra.projectkorra.airbending.passive;
 
+import com.projectkorra.projectkorra.BendingPlayer;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -14,6 +15,10 @@ public class AirSaturation extends AirAbility implements PassiveAbility {
 
 	public static double getExhaustionFactor() {
 		return ConfigManager.getConfig().getDouble("Abilities.Air.Passive.Factor");
+	}
+
+	public static double getRegenFactor() {
+		return ConfigManager.getConfig().getDouble("Abilities.Air.Passive.RegenFactor");
 	}
 
 	@Override

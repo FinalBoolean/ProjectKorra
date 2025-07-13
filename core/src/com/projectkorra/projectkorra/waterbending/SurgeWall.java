@@ -105,26 +105,7 @@ public class SurgeWall extends WaterAbility {
 		if (this.bPlayer.isOnCooldown("SurgeWave") || player.isSneaking()) {
 			return;
 		} else if (wall == null && WaterReturn.hasWaterBottle(player)) {
-			final Location eyeLoc = player.getEyeLocation();
-			final Block block = eyeLoc.add(eyeLoc.getDirection().normalize()).getBlock();
-
-			if (isTransparent(player, block) && isTransparent(player, eyeLoc.getBlock())) {
-				final TempBlock tempBlock = new TempBlock(block, Material.WATER);
-				SOURCE_BLOCKS.add(tempBlock);
-
-				wave = new SurgeWave(player);
-				wave.setCanHitSelf(false);
-				wave.moveWater();
-
-				if (!wave.isProgressing()) {
-					wave.remove();
-				} else {
-					WaterReturn.emptyWaterBottle(player);
-				}
-
-				SOURCE_BLOCKS.remove(tempBlock);
-				tempBlock.revertBlock();
-			}
+			return;
 		}
 	}
 

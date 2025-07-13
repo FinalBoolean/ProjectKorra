@@ -1,6 +1,7 @@
 package com.projectkorra.projectkorra.util;
 
 import com.projectkorra.projectkorra.GeneralMethods;
+import okhttp3.MultipartBody;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -30,6 +31,7 @@ public enum ParticleEffect {
 	COMPOSTER (Particle.COMPOSTER),
 	CRIMSON_SPORE (Particle.CRIMSON_SPORE),
 	CRIT (Particle.CRIT),
+	ELECTRIC_SPARK(Particle.ELECTRIC_SPARK),
 	CRIT_MAGIC (Particle.CRIT_MAGIC), @Deprecated MAGIC_CRIT (Particle.CRIT_MAGIC),
 	CURRENT_DOWN (Particle.CURRENT_DOWN),
 	DAMAGE_INDICATOR (Particle.DAMAGE_INDICATOR),
@@ -152,13 +154,18 @@ public enum ParticleEffect {
 	 */
 	public void display(Location loc, int amount, double offsetX, double offsetY, double offsetZ, double extra) {
 		Object data = null;
+		Particle particle1 = particle;
 
 		if (this == ParticleEffect.COOL_AIR_PARTICLE) {
 			Color color = new Random().nextBoolean() ? Color.WHITE : Color.fromRGB(169, 169, 169);  // Light gray
-			data = new Particle.DustOptions(color, 1.0f);
+			data = new Particle.DustOptions(color, 0.5F);
 		}
 
-		loc.getWorld().spawnParticle(particle, loc, amount, offsetX, offsetY, offsetZ, extra, data, true);
+		if ((this == ParticleEffect.FLAME || this == ParticleEffect.SOUL_FIRE_FLAME) && extra == 0) {
+			extra += 0.01;
+		}
+
+		loc.getWorld().spawnParticle(particle1, loc, amount, offsetX, offsetY, offsetZ, extra, data, true);
 	}
 
 	/**
