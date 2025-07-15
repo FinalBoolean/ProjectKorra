@@ -154,7 +154,7 @@ public class AirScooter extends AirAbility {
 			return;
 		}
 
-		if (this.player.isSneaking()) {
+		if (this.bPlayer.isSneaking()) {
 			this.bPlayer.addCooldown(this);
 			this.remove();
 			return;

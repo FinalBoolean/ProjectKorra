@@ -1536,6 +1536,16 @@ public class PKListener implements Listener {
 			return;
 		}
 
+		AirScooter airScooter = CoreAbility.getAbility(player, AirScooter.class);
+		if (airScooter != null) {
+			airScooter.getBendingPlayer().addCooldown(airScooter);
+			airScooter.remove();
+		}
+
+
+
+		bPlayer.setSneaking(event.isSneaking());
+
 		if (bPlayer.canCurrentlyBendWithWeapons()) {
 			if (player.isSneaking()) {
 				ComboManager.addComboAbility(player, ClickType.SHIFT_UP);

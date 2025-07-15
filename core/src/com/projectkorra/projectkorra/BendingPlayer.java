@@ -83,6 +83,7 @@ public class BendingPlayer extends OfflineBendingPlayer {
 	private long lastAirBlastReward;
 	private boolean scooterReward;
 	private long lastHealthRegen;
+	private boolean sneaking;
 
 	public BendingPlayer(Player player) {
 		super(player);
@@ -1031,5 +1032,13 @@ public class BendingPlayer extends OfflineBendingPlayer {
 
 	public long getLastHealthRegen() {
 		return lastHealthRegen;
+	}
+
+	public void setSneaking(boolean sneaking) {
+		this.sneaking = sneaking;
+	}
+
+	public boolean isSneaking() {
+		return sneaking;
 	}
 }
