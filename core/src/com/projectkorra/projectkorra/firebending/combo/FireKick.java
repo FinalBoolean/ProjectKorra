@@ -100,6 +100,7 @@ public class FireKick extends FireAbility implements ComboAbility {
 
 				final FireComboStream fs = new FireComboStream(this.player, this, vec, this.player.getLocation(), this.range, this.speed);
 				fs.setSpread(0.2F);
+				fs.setCollisionRadius(1);
 				fs.setDensity(5);
 				fs.setUseNewParticles(true);
 				fs.setDamage(this.damage);

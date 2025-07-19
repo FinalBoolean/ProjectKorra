@@ -800,17 +800,27 @@ public class Lightning extends LightningAbility {
 		public void run() {
 			if (ThreadLocalRandom.current().nextDouble() < .1) {
 				playLightningbendingParticle(this.location, 0.1F, 0.1F, 0.1F);
-				ParticleEffect.FLASH.display(player.getLocation(), 1);
 			}
+
+			if (ThreadLocalRandom.current().nextDouble() < .01) {
+				ParticleEffect.FLASH.display(this.location, 1);
+				Sound sound = Sound.ENTITY_LIGHTNING_BOLT_THUNDER;
+				final float pitch = (float) getConfig().getDouble("Properties.Fire.LightningHit.Pitch");
+				try {
+					sound = Sound.valueOf(getConfig().getString("Properties.Fire.LightningHit.Sound"));
+				} catch (final IllegalArgumentException exception) {
+					ProjectKorra.log.warning("Your current value for 'Properties.Fire.LightningHit.Sound' is not valid.");
+				} finally {
+					this.location.getWorld().playSound(location, sound, 15, pitch);
+				}
+			}
+
 			emitFirebendingLight(this.location);
 
 			this.count++;
 			if (this.count > 5) {
 				this.cancel();
 			} else if (this.count == 1) {
-				if (ThreadLocalRandom.current().nextDouble() < .1) {
-					playLightningbendingSound(location);
-				}
 				if (Lightning.this.state == State.CHAIN) {
 					Lightning.this.chainCopperLightning(this.location);
 				}
