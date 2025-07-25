@@ -876,6 +876,7 @@ public class ConfigManager {
 			config.addDefault("Abilities.Air.AirBlast.DecayAmount", 0.20);
 			config.addDefault("Abilities.Air.AirBlast.DecayMinimum", 0.20);
 			config.addDefault("Abilities.Air.AirBlast.MinimumAirBlastTime", 700);
+			config.addDefault("Abilities.Air.AirBlast.SlidingFriction", 0.5);
 
 			config.addDefault("Abilities.Air.AirBurst.Enabled", true);
 			config.addDefault("Abilities.Air.AirBurst.FallThreshold", 10);

@@ -76,7 +76,7 @@ public class FireBlastCharged extends FireAbility {
 		this.chargeTime = (long) getConfig().getLong("Abilities.Fire.FireBlast.Charged.ChargeTime");
 		this.cooldown = getConfig().getLong("Abilities.Fire.FireBlast.Charged.Cooldown");
 		this.time = System.currentTimeMillis();
-		this.interval = 25;
+		this.interval = 15;
 		this.collisionRadius = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.CollisionRadius");
 		this.minDamage = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.MinimumDamage");
 		this.maxDamage = getConfig().getDouble("Abilities.Fire.FireBlast.Charged.MaximumDamage");

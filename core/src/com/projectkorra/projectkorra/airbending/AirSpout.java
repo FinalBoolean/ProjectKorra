@@ -120,6 +120,14 @@ public class AirSpout extends AirAbility {
 		return true;
 	}
 
+	@Override
+	public void handleCollision(Collision collision) {
+		if (collision.isRemovingFirst()) {
+			this.bPlayer.addCooldown(this, 3000);
+		}
+		super.handleCollision(collision);
+	}
+
 	private Block getGround() {
 		final Block standingblock = this.player.getLocation().getBlock();
 		for (int i = 0; i <= this.height + 5; i++) {
@@ -238,7 +246,7 @@ public class AirSpout extends AirAbility {
 	public List<Location> getLocations() {
 		final ArrayList<Location> locations = new ArrayList<>();
 		final Location topLoc = this.player.getLocation().getBlock().getLocation();
-		final double ySpacing = 3;
+		final double ySpacing = 1;
 		for (double i = 0; i <= this.height; i += ySpacing) {
 			locations.add(topLoc.clone().add(0, -i, 0));
 		}

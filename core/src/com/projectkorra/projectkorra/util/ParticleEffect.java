@@ -157,8 +157,9 @@ public enum ParticleEffect {
 		Particle particle1 = particle;
 
 		if (this == ParticleEffect.COOL_AIR_PARTICLE) {
-			Color color = new Random().nextBoolean() ? Color.WHITE : Color.fromRGB(169, 169, 169);  // Light gray
-			data = new Particle.DustOptions(color, 0.5F);
+			Color color = new Random().nextBoolean() ? Color.WHITE : Color.fromRGB(180, 190, 210);  // Airy bluish gray
+			data = new Particle.DustOptions(color, 1f);
+			extra += 0.05f;
 		}
 
 		if ((this == ParticleEffect.FLAME || this == ParticleEffect.SOUL_FIRE_FLAME) && extra == 0) {

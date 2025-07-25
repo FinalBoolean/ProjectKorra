@@ -71,6 +71,7 @@ public class AirBlast extends AirAbility {
 	private double decayAmount;
 	private double decayMinimum;
 	private long minimumAirBlastTime;
+	private double slidingFriction;
 
 	private Location location;
 	private Location origin;
@@ -176,6 +177,7 @@ public class AirBlast extends AirAbility {
 		this.decayAmount = getConfig().getDouble("Abilities.Air.AirBlast.DecayAmount");
 		this.decayMinimum = getConfig().getDouble("Abilities.Air.AirBlast.DecayMinimum");
 		this.minimumAirBlastTime = getConfig().getLong("Abilities.Air.AirBlast.MinimumAirBlastTime");
+		this.slidingFriction = getConfig().getDouble("Abilities.Air.AirBlast.SlidingFriction");
 
 		this.isFromOtherOrigin = false;
 		this.showParticles = true;
@@ -318,7 +320,7 @@ public class AirBlast extends AirAbility {
 
 		if (GeneralMethods.isSolid(entity.getLocation().add(0, -0.5, 0).getBlock()) && source == null) {
 			//change to .5 from .85
-			knockback *= 0.5;
+			knockback *= slidingFriction;
 		}
 
 		//add double comp and calculations & change factor to knockback
