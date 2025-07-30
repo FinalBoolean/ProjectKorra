@@ -9,6 +9,7 @@ import com.projectkorra.projectkorra.configuration.ConfigManager;
 import com.projectkorra.projectkorra.event.BendingPlayerCreationEvent;
 import com.projectkorra.projectkorra.event.PlayerBindChangeEvent;
 import com.projectkorra.projectkorra.object.AirBlastType;
+import com.projectkorra.projectkorra.optimizer.SimpleMessageBuffer;
 import com.projectkorra.projectkorra.storage.DBConnection;
 import com.projectkorra.projectkorra.util.ChatUtil;
 import com.projectkorra.projectkorra.util.Cooldown;
@@ -19,6 +20,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -428,6 +432,7 @@ public class OfflineBendingPlayer {
                         bPlayer.uncacheAfter(30_000);
                     }
                 }
+
             } catch (final SQLException | ExecutionException | InterruptedException ex) {
                 ex.printStackTrace();
                 future.cancel(true);
@@ -611,6 +616,31 @@ public class OfflineBendingPlayer {
         }
 
         this.saveAbility(fixedName, slot);
+        this.syncAbilities();
+    }
+
+    public void syncAbilities() {
+        if (!isOnline()) return;
+        if (this instanceof BendingPlayer) {
+            BendingPlayer bPlayer = (BendingPlayer) this;
+            if (!bPlayer.hasOptimizer()) return;
+
+            Map<Integer, String> abilities = getAbilities();
+            int size = abilities.size();
+            SimpleMessageBuffer buffer = new SimpleMessageBuffer(abilities.size());
+            buffer.writeVarInt(size);
+            for (Map.Entry<Integer, String> entry : abilities.entrySet()) {
+                String value = entry.getValue();
+                if (entry.getValue() == null) {
+                    value = "";
+                }
+
+                buffer.writeVarInt(entry.getKey());
+                buffer.writeUtf(value);
+            }
+
+            bPlayer.getPlayer().sendPluginMessage(ProjectKorra.plugin, "pkoptimizer:slot_update", buffer.toByteArray());
+        }
     }
 
     /**

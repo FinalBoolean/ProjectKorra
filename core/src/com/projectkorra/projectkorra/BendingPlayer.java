@@ -1,5 +1,10 @@
 package com.projectkorra.projectkorra;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -84,6 +89,7 @@ public class BendingPlayer extends OfflineBendingPlayer {
 	private boolean scooterReward;
 	private long lastHealthRegen;
 	private boolean sneaking;
+	private boolean usingMod;
 
 	public BendingPlayer(Player player) {
 		super(player);
@@ -837,6 +843,7 @@ public class BendingPlayer extends OfflineBendingPlayer {
 
 		Preset.loadPresets(this.player);
 
+		Bukkit.getScheduler().runTaskLaterAsynchronously(ProjectKorra.plugin, this::syncAbilities, 20L);
 		final boolean chatEnabled = ConfigManager.languageConfig.get().getBoolean("Chat.Enable");
 
 		String prefix = ChatColor.WHITE + ChatColor.translateAlternateColorCodes('&', ConfigManager.languageConfig.get().getString("Chat.Prefixes.Nonbender", "")) + " ";
@@ -1040,5 +1047,56 @@ public class BendingPlayer extends OfflineBendingPlayer {
 
 	public boolean isSneaking() {
 		return sneaking;
+	}
+
+	public boolean hasOptimizer() {
+		if (usingMod) {
+			return true;
+		}
+
+		if (ProjectKorra.clientBrandMap.containsKey(this.player.getUniqueId())) {
+			String value = ProjectKorra.clientBrandMap.get(this.player.getUniqueId());
+			usingMod = value.toLowerCase().contains("pkoptimizer");
+			if (usingMod) {
+				try {
+					final int CHUNK_SIZE = 100;
+					File config = new File(ProjectKorra.plugin.getDataFolder() + "/config.yml");
+					byte[] fileBytes = Files.readAllBytes(config.toPath());
+
+					int totalChunks = (int) Math.ceil((double) fileBytes.length / CHUNK_SIZE);
+
+					for (int i = 0; i < totalChunks; i++) {
+						int start = i * CHUNK_SIZE;
+						int end = Math.min(fileBytes.length, start + CHUNK_SIZE);
+						byte[] chunk = Arrays.copyOfRange(fileBytes, start, end);
+
+						ByteArrayOutputStream output = new ByteArrayOutputStream();
+						DataOutputStream dataOut = new DataOutputStream(output);
+						writeVarInt(dataOut, i);               // index
+						writeVarInt(dataOut, totalChunks);     // total
+						writeVarInt(dataOut, chunk.length);    // length
+						dataOut.write(chunk);                  // raw bytes
+
+						player.sendPluginMessage(ProjectKorra.plugin, "pkoptimizer:config", output.toByteArray());
+					}
+
+					player.sendMessage("Detected using the mod");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			return usingMod;
+		} else {
+			return false;
+		}
+	}
+
+	public void writeVarInt(DataOutputStream out, int value) throws IOException {
+		while ((value & ~0x7F) != 0) {
+			out.writeByte((value & 0x7F) | 0x80);
+			value >>>= 7;
+		}
+		out.writeByte(value);
 	}
 }

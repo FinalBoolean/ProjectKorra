@@ -79,12 +79,14 @@ public class AirScooter extends AirAbility {
 			return;
 		}
 
-		this.flightHandler.createInstance(player, this.getName());
-		player.setAllowFlight(true);
-		player.setFlying(true);
+		if (!bPlayer.hasOptimizer()) {
+			this.flightHandler.createInstance(player, this.getName());
+			player.setAllowFlight(true);
+			player.setFlying(true);
 
-		player.setSprinting(false);
-		player.setSneaking(false);
+			player.setSprinting(false);
+			player.setSneaking(false);
+		}
 
 		for (int i = 0; i < 5; i++) {
 			this.angles.add((double) (60 * i));
@@ -145,6 +147,13 @@ public class AirScooter extends AirAbility {
 		} else if (this.duration > 0 && System.currentTimeMillis() > this.getStartTime() + this.duration) {
 			this.bPlayer.addCooldown(this);
 			this.remove();
+			return;
+		}
+
+		if (bPlayer.hasOptimizer()) {
+			if (System.currentTimeMillis() > this.getStartTime() + interval) {
+				this.spinScooter();
+			}
 			return;
 		}
 
