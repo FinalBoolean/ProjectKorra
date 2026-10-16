@@ -280,6 +280,7 @@ public class AirSuction extends AirAbility {
 		this.direction = GeneralMethods.getDirection(this.location, this.origin).normalize();
 		this.progressing = true;
 		this.bPlayer.addCooldown(this);
+		this.bPlayer.addCooldown("AirBlast", this.cooldown); // AirBlast and AirSuction share a cooldown
 	}
 
 	public static void shoot(final Player player) {

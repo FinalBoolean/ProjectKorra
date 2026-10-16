@@ -128,6 +128,7 @@ public class AirBlast extends AirAbility {
 		}
 		this.location = this.origin.clone();
 		this.bPlayer.addCooldown(this);
+		this.bPlayer.addCooldown("AirSuction", this.cooldown); // AirBlast and AirSuction share a cooldown
 		this.start();
 	}
 
